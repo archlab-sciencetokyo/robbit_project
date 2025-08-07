@@ -1,0 +1,65 @@
+#!/bin/bash
+
+set -e
+
+# setting
+HEADER_FILE="./app/st7789.h"
+SOURCE_FILE="./app/st7789.c"
+FUNC_NAME="pg_lcd_prints_color"
+TEMP_CODE_FILE="./setting/st7789_diff.txt"
+
+if [ ! -f "$HEADER_FILE" ]; then
+    echo "Error: Could not find '$HEADER_FILE'"
+    exit 1
+fi
+if [ ! -f "$SOURCE_FILE" ]; then
+    echo "Error: Could not '$SOURCE_FILE'"
+    exit 1
+fi
+
+if grep -q "$FUNC_NAME" "$HEADER_FILE"; then
+    echo "'$FUNC_NAME' exist in '$HEADER_FILE'"
+else
+    # pg_lcd_prints の宣言の後に、新しい関数のプロトタイプを追記します。
+    awk '
+        1; # すべての行をそのまま出力
+        /void pg_lcd_prints\(const char \*str\);/ {
+            print "void pg_lcd_prints_color(const char *str, char color);"
+        }
+    ' "$HEADER_FILE" > "$HEADER_FILE.tmp" && mv "$HEADER_FILE.tmp" "$HEADER_FILE"
+fi
+
+# 関数が既に存在するか確認
+if grep -q "$FUNC_NAME" "$SOURCE_FILE"; then
+    echo "'$FUNC_NAME' already exist in '$SOURCE_FILE'"
+else
+
+# 追加する関数のコードを一時ファイルに書き出す
+cat > "$TEMP_CODE_FILE" <<'EOF'
+
+void pg_lcd_prints_color(const char *str, char color) {
+    while (*str) {
+        if (*str == '\n') {
+            st7789_col = 0;
+            st7789_row = (st7789_row + 1) % 15;
+        }
+        else if (*str == '\r') {
+            st7789_col = 0;
+        }
+        else {
+            pg_lcd_draw_char(st7789_col << 4, st7789_row << 4, *str, color, 1);
+            _pg_lcd_update_pos();
+        }
+        str++;
+    }
+}
+EOF
+
+    awk -v tempfile="$TEMP_CODE_FILE" '
+        /void pg_lcd_set_pos\(int x, int y\)/ {
+            system("cat " tempfile)
+        }
+        { print }
+    ' "$SOURCE_FILE" > "$SOURCE_FILE.tmp" && mv "$SOURCE_FILE.tmp" "$SOURCE_FILE"
+fi
+
