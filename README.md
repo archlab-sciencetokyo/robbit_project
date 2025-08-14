@@ -32,6 +32,8 @@ Table 1 shows the parts required to build robbit.
 
 ## Chap. 2 Assembling the Robot
 
+作成中
+
 -----
 
 ## Chap. 3 Environment Setup
@@ -56,6 +58,12 @@ Next, integrate the robbit repository with the CFU-Proving-Ground repository usi
 ```bash
 cd robbit_opensource
 make init
+```
+
+If you want to revert this repository to its pre-integration state, enter the following command
+
+```bash
+make reset 
 ```
 
 -----
