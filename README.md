@@ -50,13 +50,13 @@ This may take some time as it involves setting up the RISC-V compiler.
 Clone the robbit repository into the same directory as CFU-Proving-Ground using the following command:
 
 ```bash
-git clone git@github.com:kumagai0212/robbit_opensource.git
+git clone git@github.com:kumagai0212/robbit_archlab.git
 ```
 
 Next, integrate the robbit repository with the CFU-Proving-Ground repository using the following commands:
 
 ```bash
-cd robbit_opensource
+cd robbit_archlab
 make init
 ```
 

@@ -20,7 +20,7 @@ fi
 if grep -q "$FUNC_NAME" "$HEADER_FILE"; then
     echo "'$FUNC_NAME' exist in '$HEADER_FILE'"
 else
-    # pg_lcd_prints の宣言の後に、新しい関数のプロトタイプを追記します。
+    
     awk '
         1; # すべての行をそのまま出力
         /void pg_lcd_prints\(const char \*str\);/ {
@@ -29,12 +29,10 @@ else
     ' "$HEADER_FILE" > "$HEADER_FILE.tmp" && mv "$HEADER_FILE.tmp" "$HEADER_FILE"
 fi
 
-# 関数が既に存在するか確認
 if grep -q "$FUNC_NAME" "$SOURCE_FILE"; then
     echo "'$FUNC_NAME' already exist in '$SOURCE_FILE'"
 else
 
-# 追加する関数のコードを一時ファイルに書き出す
 cat > "$TEMP_CODE_FILE" <<'EOF'
 
 void pg_lcd_prints_color(const char *str, char color) {

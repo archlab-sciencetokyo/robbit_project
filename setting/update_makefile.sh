@@ -1,7 +1,5 @@
 #!/bin/bash
 
-# このスクリプトは、Makefileを受け取り、内容を安全に編集します。
-# コマンドが失敗したら、ただちにスクリプトを終了します。
 set -e
 sed -i 's/\xc2\xa0/ /g' ./Makefile
 
@@ -9,7 +7,7 @@ sed -i 's/\xc2\xa0/ /g' ./Makefile
 awk '/^clean:/ {p=1} /^\S/ && !/^clean:/ {p=0} p' Makefile > .clean_block.tmp
 
 # edit Makefile
-# 1つのsedコマンドで1つの処理を行うように分割
+
 sed -i '/^GCC\s*:=/d' Makefile
 sed -i 's/^TARGET := arty_a7/TARGET := cmod_a7/' Makefile
 sed -i '/^#TARGET := .*/d' Makefile
