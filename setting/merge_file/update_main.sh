@@ -5,7 +5,7 @@ set -e
 # setting
 TARGET_FILE="main.v"                      
 TARGET_TEXT_1='wire [`DBUS_DATA_WIDTH-1:0] dbus_rdata;' 
-DIFF_FILE="./setting/main_diff.txt"                 
+DIFF_FILE="./setting/merge_file/main_diff.txt"                 
 TARGET_TEXT_2='assign dbus_rdata ='
 OLD_TEXT_1="dmem_rdata"
 NEW_TEXT_1="(r_dmem_addr[31:28]==4'h3) ? w_mmio_data: dmem_rdata"

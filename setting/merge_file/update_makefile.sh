@@ -47,7 +47,7 @@ cat .clean_block.tmp >> Makefile
 
 # input init
 echo "" >> Makefile
-cat ./setting/Makefile.txt >> Makefile
+cat ./setting/merge_file/Makefile.txt >> Makefile
 
 # cleanup
 rm .clean_block.tmp

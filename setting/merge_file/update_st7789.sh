@@ -6,7 +6,7 @@ set -e
 HEADER_FILE="./app/st7789.h"
 SOURCE_FILE="./app/st7789.c"
 FUNC_NAME="pg_lcd_prints_color"
-TEMP_CODE_FILE="./setting/st7789_diff.txt"
+TEMP_CODE_FILE="./setting/merge_file/st7789_diff.txt"
 
 if [ ! -f "$HEADER_FILE" ]; then
     echo "Error: Could not find '$HEADER_FILE'"
@@ -22,7 +22,7 @@ if grep -q "$FUNC_NAME" "$HEADER_FILE"; then
 else
     
     awk '
-        1; # すべての行をそのまま出力
+        1; 
         /void pg_lcd_prints\(const char \*str\);/ {
             print "void pg_lcd_prints_color(const char *str, char color);"
         }
