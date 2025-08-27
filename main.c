@@ -230,12 +230,12 @@ int *const MPU_ADDR_gxaz = (int *)0x30000004;
 int *const MPU_ADDR_gzgy = (int *)0x30000008;
 int *const MPU_ADDR_TIME = (int *)0x30000010;
 ///// parameters
-int *const VIO_ADDR_trgt = (int *)0x30000020;
-int *const VIO_ADDR_pgin = (int *)0x30000024;
-int *const VIO_ADDR_igin = (int *)0x30000028;
-int *const VIO_ADDR_dgin = (int *)0x3000002c;
-int *const VIO_ADDR_vmin = (int *)0x30000030;
-int *const VIO_ADDR_vmax = (int *)0x30000034;
+// int *const VIO_ADDR_trgt = (int *)0x30000020;
+// int *const VIO_ADDR_pgin = (int *)0x30000024;
+// int *const VIO_ADDR_igin = (int *)0x30000028;
+// int *const VIO_ADDR_dgin = (int *)0x3000002c;
+// int *const VIO_ADDR_vmin = (int *)0x30000030;
+// int *const VIO_ADDR_vmax = (int *)0x30000034;
 ///// CTRL
 int *const MTR_ADDR_ctrl = (int *)0x30000040;
 ///// button
@@ -432,14 +432,14 @@ int main() {
         }
         /****************************************************************************/        
         
-#ifdef TUNING ///// Parameter Tuning by VIO
-        p.target = (float)*(VIO_ADDR_trgt) * 0.1;
-        p.Kp     = *(VIO_ADDR_pgin);
-        p.Ki     = *(VIO_ADDR_igin);
-        p.Kd     = *(VIO_ADDR_dgin);
-        p.Vmin   = *(VIO_ADDR_vmin);
-        p.Vmax   = *(VIO_ADDR_vmax);
-#endif
+// #ifdef TUNING ///// Parameter Tuning by VIO
+//         p.target = (float)*(VIO_ADDR_trgt) * 0.1;
+//         p.Kp     = *(VIO_ADDR_pgin);
+//         p.Ki     = *(VIO_ADDR_igin);
+//         p.Kd     = *(VIO_ADDR_dgin);
+//         p.Vmin   = *(VIO_ADDR_vmin);
+//         p.Vmax   = *(VIO_ADDR_vmax);
+// #endif
 
         while(1){ ///// delay
             timer = *(MPU_ADDR_TIME);

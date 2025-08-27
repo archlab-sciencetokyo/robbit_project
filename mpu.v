@@ -1,12 +1,11 @@
-`include "config.vh"
-
 /******************************************************************************************/
 /* Self Balancing Car Project since 2025-01      Copyright(c) 2025 Archlab. Science Tokyo */
 /* this code is not verified well                                                         */
 /******************************************************************************************/
-
-module mpu6050 (
-    input clk_i,          //12MHz input crystal
+`include "config.vh"
+//I2C(センサとFPGAの通信)
+module mpu6050(
+    input clk_i,          //input clock CLK_FREQ_MHZ in config.vh
     input rst_i,          //reset (active high)
     output [31:0] data1_o, // MMIO
     output [31:0] data2_o, // MMIO
@@ -16,13 +15,13 @@ module mpu6050 (
     inout sda           //I2C SDA  PULLUP TRUE at Pmod
     );
 
+    reg [7:0] who_am_i;
+    reg [8*14-1:0] senser_14_data; // {ax, ay, az, temp, gx, gy, gz}
+    
     assign data1_o = {senser_14_data[95:80], senser_14_data[111:96]}; // ay, ax
     assign data2_o = {senser_14_data[47:32], senser_14_data[ 79:64]}; // gx, az
     assign data3_o = {senser_14_data[15: 0], senser_14_data[ 31:16]}; // gz, gy
 
-    reg [7:0] who_am_i;
-    reg [8*14-1:0] senser_14_data; // {ax, ay, az, temp, gx, gy, gz}
-    
     localparam [6:0] I2C_ADDR = 7'h68;
 
     //State machine
@@ -57,11 +56,8 @@ module mpu6050 (
     reg         request_transmit;
     wire [7:0]  data_out;
     wire        valid_out;
-    wire        req_data_chunk;
     wire        busy;
     wire        nack;
-
-    localparam CNT_1_SEC = `CLK_FREQ_MHZ * 1_000_000;                     // 1 second delay
 
     //State machine for setup and 1 second reads of Temperature
     always@(posedge clk_i or posedge rst_i) begin
@@ -82,6 +78,7 @@ module mpu6050 (
             cntr <= en_cntr ? cntr + 1 : 0;
             who_am_i_read <= 1'b0;
             case(state)
+                //release sleep mode 
                 SETUP: begin
                     slave_addr <= {I2C_ADDR, 1'b0};     //LSB denotes write
                     i_sub_addr <= 16'h6B;               //Register address is 0x6B for Device ID
@@ -93,21 +90,21 @@ module mpu6050 (
                 end
 
                 WRITE_REQ: begin
-                    if(busy) begin //I2C_IDLEから遷移
+                    if(busy) begin
                         state <= WRITE_FINISH;
                         request_transmit <= 1'b0;
                         en_cntr <= 1'b1;
                     end
                 end
 
-                WRITE_FINISH: begin //busyはi2cからACKが返ってきた時と終了したときに1になる
+                WRITE_FINISH: begin
                     if(!busy) begin
                         state <= WHO_AM_I_AQ;
                     end
                 end
 
                 WHO_AM_I_AQ: begin
-                    if(cntr == CNT_1_SEC) begin //1 sec delay
+                    if(cntr == 100_000_000) begin //1 sec delay
                         en_cntr <= 1'b0;
                         slave_addr <= {I2C_ADDR, 1'b1};     //LSB denotes read
                         i_sub_addr <= 16'h75;               //Register address is 0x75 for WHO AM I
@@ -142,8 +139,11 @@ module mpu6050 (
                 end
 
                 SEN_14_DATA_REQ: begin
-                    if(!busy) begin //0.005 sec delay for 14 byte read 200Hz
-                        en_cntr <= 1'b0;
+                    if(!busy) begin
+                    //if(cntr == 100_000) begin //1200Hz　//max 2kHz(cntr=0 i2Cの限界)?
+                    // wait until busy is 0 (and valid out is 0) : busy is 1 (READ_REQ~ I2C:RELEASE), (valid is 1 (AWAIT_DATA~)
+                    // wait til busy is 0 in order to verify I2C master is IDLE state
+                        en_cntr <= 1'b0; //  =: cntr <= 0
                         slave_addr <= {I2C_ADDR, 1'b1};     //LSB denotes read
                         i_sub_addr <= 16'h3B;               //Register address is 0x3B for ACCEL_XOUT_H
                         i_sub_len <= 1'b0;                  //Denotes reg addr is 8 bit
@@ -156,7 +156,7 @@ module mpu6050 (
                 end
 
                 READ_REQ: begin
-                    if(busy) begin
+                    if(busy) begin // wait until i2c master start communicating
                         state <= AWAIT_DATA;
                         request_transmit <= 1'b0;
                         en_cntr <= 1'b1;
@@ -164,7 +164,7 @@ module mpu6050 (
                 end
 
                 AWAIT_DATA: begin
-                    if(valid_out) begin
+                    if(valid_out) begin // wait until data comes from slave
                         state <= INCR_DATA_AQ;
                         data_read <= data_out;
                     end
@@ -176,7 +176,9 @@ module mpu6050 (
                         senser_14_read <= 1'b1;
                     end
                     //else begin
-                    else begin
+                    else if (!valid_out) begin
+                    // wait !valid_out from i2c master but maybe it is in void
+                    // at i2c master, valid_out asserted only 1 clk in my understanding.
                         read_bytes <= read_bytes + 1;
                         state <= AWAIT_DATA;
                     end
@@ -215,40 +217,34 @@ module mpu6050 (
         end
     end
 
-    // ila_0 your_ila_instance (
-    // .clk(clk_i),
-    // .probe0(state),
-    // .probe1(who_am_i)
-    // );
-
     //Instantiate daughter modules 
-    i2c_master #(
-    )i_i2c_master(.i_clk          (clk_i),                    //input clock to the module @100MHz (or whatever crystal you have on the board)
+    i2c_master i_i2c_master(.i_clk          (clk_i),                   //input clock CLK_FREQ_MHZ in config.vh
                             .reset_n        (!rst_i),                  //reset for creating a known start condition
-                            .i_addr_w_rw    (slave_addr),       //7 bit address, LSB is the read write bit, with 0 being write, 1 being read
-                            .i_sub_addr     (i_sub_addr),        //contains sub addr to send to slave, partition is decided on bit_sel
-                            .i_sub_len      (i_sub_len),          //denotes whether working with an 8 bit or 16 bit sub_addr, 0 is 8bit, 1 is 16 bit
-                            .i_byte_len     (i_byte_len),        //denotes whether a single or sequential read or write will be performed (denotes number of bytes to read or write)
-                            .i_data_write   (i_data_write),    //Data to write if performing write action
-                            .req_trans      (request_transmit),   //denotes when to start a new transaction
+                            .i_addr_w_rw    (slave_addr),              //7 bit address, LSB is the read write bit, with 0 being write, 1 being read
+                            .i_sub_addr     (i_sub_addr),              //contains sub addr to send to slave, partition is decided on bit_sel
+                            .i_sub_len      (i_sub_len),               //denotes whether working with an 8 bit or 16 bit sub_addr, 0 is 8bit, 1 is 16 bit
+                            .i_byte_len     (i_byte_len),              //denotes whether a single or sequential read or write will be performed (denotes number of bytes to read or write)
+                            .i_data_write   (i_data_write),            //Data to write if performing write action
+                            .req_trans      (request_transmit),        //denotes when to start a new transaction
 
                             /** For Reads **/
                             .data_out       (data_out),
                             .valid_out      (valid_out),
 
                             /** I2C Lines **/
-                            .scl_o          (scl),                    //i2c clck line, output by this module, 400 kHz
-                            .sda_o          (sda),                    //i2c data line, set to 1'bz when not utilized (resistors will pull it high)
+                            .scl_o          (scl),                     //i2c clck line, output by this module, 400 kHz
+                            .sda_o          (sda),                     //i2c data line, set to 1'bz when not utilized (resistors will pull it high)
 
                             /** Comms to Master Module **/
-                            .req_data_chunk (req_data_chunk),//Request master to send new data chunk in i_data_write
                             .busy           (busy),                    //denotes whether module is currently communicating with a slave
                             .nack           (nack)
                             );  
 
 endmodule
 
-module i2c_master(input             i_clk,              //input clock to the module 
+
+//i2c_master module excluding multi-bit write
+module i2c_master(input             i_clk,              //input clock CLK_FREQ_MHZ
                   input             reset_n,            //reset for creating a known start condition
                   input      [7:0]  i_addr_w_rw,        //7 bit address, LSB is the read write bit, with 0 being write, 1 being read
                   input      [15:0] i_sub_addr,         //contains sub addr to send to slave, partition is decided on bit_sel
@@ -266,48 +262,9 @@ module i2c_master(input             i_clk,              //input clock to the mod
                   inout             sda_o,              //i2c data line, set to 1'bz when not utilized (resistors will pull it high)
                   
                   /** Comms to Master Module **/
-                  output reg        req_data_chunk ,    //Request master to send new data chunk in i_data_write
                   output reg        busy,               //denotes whether module is currently communicating with a slave
-                  output reg        nack                //denotes whether module is encountering a nack from slave (only activates when master is attempting to contact device)
-                  
-                  `ifdef DEBUG
-                  ,
-                  output reg [3:0]  state,
-                  output reg [3:0]  next_state,
-                  output reg        reg_sda_o,
-                  output reg [7:0]  addr,
-                  output reg        rw,
-                  output reg [15:0] sub_addr,
-                  output reg        sub_len,
-                  output reg [23:0] byte_len,
-                  output reg        en_scl,
-                  output reg        byte_sent,
-                  output reg [23:0] num_byte_sent,
-                  output reg [2:0]  cntr,
-                  output reg [7:0]  byte_sr,
-                  output reg        read_sub_addr_sent_flag,
-                  output reg [7:0]  data_to_write,
-                  output reg [7:0]  data_in_sr,
-                  
-                  //400KHz clock generation
-                  output reg        clk_i2c,
-                  output reg [15:0] clk_i2c_cntr,
-                  
-                  //sampling sda and scl
-                  output reg        sda_prev,
-                  output reg [1:0]  sda_curr,
-                  output reg        scl_prev,
-                  output reg        scl_curr,
-                  output reg        ack_in_prog,
-                  output reg        ack_nack,
-                  output reg        en_end_indicator,
-                  output reg        grab_next_data,
-                  output reg        scl_is_high,
-                  output reg        scl_is_low
-                  `endif
+                  output reg        nack               //denotes whether module is encountering a nack from slave (only activates when master is attempting to contact device)
                   );
-
-
 
 //For state machine                 
 localparam [3:0] IDLE        = 4'd0,
@@ -315,82 +272,60 @@ localparam [3:0] IDLE        = 4'd0,
                  RESTART     = 4'd2,
                  SLAVE_ADDR  = 4'd3,
                  SUB_ADDR    = 4'd4,
-                 
                  READ        = 4'd5,
                  WRITE       = 4'd6,
-                 GRAB_DATA   = 4'd7,
-                 ACK_NACK_RX = 4'd8,
-                 ACK_NACK_TX = 4'd9,
-                 STOP        = 4'hA,
-                 RELEASE_BUS = 4'hB;
-                 
-parameter CLK_FREQ  = `CLK_FREQ_MHZ*1_000_000; // System Clock Frequency in Hz
-parameter SCL_FREQ = 400_000;     // Desired I2C SCL Clock Frequency in Hz
+                 ACK_NACK_RX = 4'd7,
+                 ACK_NACK_TX = 4'd8,
+                 STOP        = 4'h9,
+                 RELEASE_BUS = 4'hA;
 
-localparam T_SCL_NS   = 2500; // SCL cycle
-localparam T_LOW_NS   = 1300; // SCL low period
-localparam T_HIGH_NS  = T_SCL_NS - T_LOW_NS; // SCL high period
+//Frequency dividing ratio tailored to 400 KHz
+localparam [15:0] DIV_CLK = (`CLK_FREQ_MHZ*1_000_000)/(400_000*2);
 
-localparam [15:0] DIVIDER = (CLK_FREQ/SCL_FREQ)/2;   
-localparam T_HD_STA_NS = 600;  // tHD;STA: Hold time for START condition
-localparam T_SU_STA_NS = 700;  // tSU;STA: Setup time for START condition
-localparam T_SU_DAT_NS = 100;  // tSU;DAT: Data setup time
-localparam T_HD_DAT_NS = 30;    // tHD;DAT: Data hold time (spec is 0, using a margin)
-localparam T_SU_STO_NS = 600;  // tSU;STO: Setup time for STOP condition
-localparam T_BUS_NS   = 1300; // tBUS Bus free
+//communication restrictions
+localparam [7:0]  START_IND_SETUP  = (600 * (`CLK_FREQ_MHZ*1_000)) / 1_000_000,
+                  START_IND_HOLD   = (95 * (`CLK_FREQ_MHZ*1_000)) / 1_000_000,
+                  DATA_HOLD_TIME   = (30 * (`CLK_FREQ_MHZ*1_000)) / 1_000_000,
+                  DATA_SETUP_TIME  = (20 * (`CLK_FREQ_MHZ*1_000)) / 1_000_000,
+                  STOP_IND_SETUP   = (600 * (`CLK_FREQ_MHZ*1_000)) / 1_000_000,
+                  LOW_PIREOD_TIME  = (1300 * (`CLK_FREQ_MHZ*1_000)) / 1_000_000,
+                  HIGH_PIREOD_TIME = (1200 * (`CLK_FREQ_MHZ*1_000)) / 1_000_000;
 
-//timing parametor
-localparam [7:0]  START_IND_SETUP  = (T_SU_STA_NS * (CLK_FREQ / 1000)) / 1000000,  //Time before negedge of scl
-                  START_IND_HOLD   = (T_HD_STA_NS * (CLK_FREQ / 1000)) / 1000000,  //Time after posedge of clock when start occurs (not used)
-                  DATA_SETUP_TIME  = (T_SU_DAT_NS * (CLK_FREQ / 1000)) / 1000000,  //Time needed before posedge of scl 
-                  DATA_HOLD_TIME   = (T_HD_DAT_NS * (CLK_FREQ / 1000)) / 1000000,  //Time after negedge that scl is held
-                  STOP_IND_SETUP   = (T_SU_STO_NS * (CLK_FREQ / 1000)) / 1000000,  //Time after posedge of scl before stop occurs
-                  BUS_FREE_TIME    = (T_BUS_NS * (CLK_FREQ / 1000)) / 1000000;
-                 
-localparam [15:0] DIVIDER_LOW  = (T_LOW_NS  * (CLK_FREQ / 1000)) / 1000000;
-localparam [15:0] DIVIDER_HIGH = (T_HIGH_NS * (CLK_FREQ / 1000)) / 1000000;
+reg [3:0]  state;
+reg [3:0]  next_state;
+reg        reg_sda_o;
+reg [7:0]  addr;
+reg        rw;
+reg [15:0] sub_addr;
+reg        sub_len;
+reg [23:0] byte_len;
+reg        en_scl;
+reg        byte_sent;
+reg [23:0] num_byte_sent;
+reg [2:0]  cntr;
+reg [7:0]  byte_sr;
+reg        read_sub_addr_sent_flag;
+reg [7:0]  data_to_write;
+reg [7:0]  data_in_sr;
 
-reg [7:0] wait_cntr;       
-reg       en_wait_cntr;      
+//400KHz clock generation
+reg        clk_i2c;
+reg [15:0] clk_i2c_cntr;
 
-`ifndef DEBUG
-    reg [3:0]  state;
-    reg [3:0]  next_state;
-    reg        reg_sda_o;
-    reg [7:0]  addr;
-    reg        rw;
-    reg [15:0] sub_addr;
-    reg        sub_len;
-    reg [23:0] byte_len;
-    reg        en_scl;
-    reg        byte_sent;
-    reg [23:0] num_byte_sent;
-    reg [2:0]  cntr;
-    reg [7:0]  byte_sr;
-    reg        read_sub_addr_sent_flag;
-    reg [7:0]  data_to_write;
-    reg [7:0]  data_in_sr;
+//sampling sda and scl
+reg        sda_prev;
+reg [1:0]  sda_curr;
+reg        scl_prev;
+reg        scl_curr;
+reg        ack_in_prog;
+reg        ack_nack;
+reg        en_end_indicator;
+reg        grab_next_data;
+reg        scl_is_high;
+reg        scl_is_low;
 
-    //For generation of 400KHz clock
-    reg clk_i2c;
-    reg [15:0] clk_i2c_cntr;
-    reg [15:0] clk_state_cntr;
 
-    //For taking a sample of the scl and sda
-    reg [1:0] sda_curr;    //So this one is asynchronous especially with replies from the slave, must have synchronization chain of 2
-    reg       sda_prev;
-    reg scl_prev, scl_curr;          //master will always drive this line, so it doesn't matter
-
-    reg ack_in_prog;      //For sending acks during read
-    reg ack_nack;
-    reg en_end_indicator;
-
-    reg grab_next_data;
-    reg scl_is_high;
-    reg scl_is_low;
-`endif
-
-//clk_i2c 400KHz is synchronous to i_clk, so no need for 2 reg synchronization chain in other blocks
+//i2c_clock
 always@(posedge i_clk or negedge reset_n) begin
     if(!reset_n)
         {clk_i2c_cntr, clk_i2c} <= 17'b1;
@@ -398,36 +333,23 @@ always@(posedge i_clk or negedge reset_n) begin
         {clk_i2c_cntr, clk_i2c} <= 17'b1;
     else begin
         clk_i2c_cntr <= clk_i2c_cntr + 1;
-        if(clk_i2c == 1'b1) begin
-            if(clk_i2c_cntr == DIVIDER_HIGH-1) begin
-                clk_i2c <= !clk_i2c;
-                clk_i2c_cntr <= 0;
-            end
-        end
-        if(clk_i2c == 1'b0) begin
-            if(clk_i2c_cntr == DIVIDER_LOW-1) begin
-                clk_i2c <= !clk_i2c;
-                clk_i2c_cntr <= 0;
-            end
+        if(!clk_i2c && clk_i2c_cntr == LOW_PIREOD_TIME-1) begin
+            clk_i2c <= !clk_i2c;
+            clk_i2c_cntr <= 0;
+        end else if(clk_i2c && clk_i2c_cntr == HIGH_PIREOD_TIME-1) begin
+            clk_i2c <= !clk_i2c;
+            clk_i2c_cntr <= 0;
         end
     end
 end
 
-always @(posedge i_clk or negedge reset_n) begin
-    if (!reset_n) begin
-        wait_cntr <= 8'd0;
-    end else if (en_wait_cntr) begin
-        wait_cntr <= wait_cntr + 1;
-    end else begin
-        wait_cntr <= 8'd0; 
-    end
-end
+
 
 //Main FSM
 always@(posedge i_clk or negedge reset_n) begin
     if(!reset_n) begin
         {data_out, valid_out} <= 0;
-        {req_data_chunk, busy, nack} <= 0;
+        {busy, nack} <= 0;
         {addr, rw, sub_addr, sub_len, byte_len, en_scl} <= 0;
         {byte_sent, num_byte_sent, cntr, byte_sr} <= 0;
         {read_sub_addr_sent_flag, data_to_write, data_in_sr} <= 0;
@@ -439,11 +361,11 @@ always@(posedge i_clk or negedge reset_n) begin
     end
     else begin
         valid_out <= 1'b0;
-        req_data_chunk <= 1'b0;
         case(state)
-            
+           
             IDLE: begin
                 if(req_trans & !busy) begin
+                    
                     busy <= 1'b1;
                     state <= START;
                     next_state <= SLAVE_ADDR;
@@ -454,10 +376,10 @@ always@(posedge i_clk or negedge reset_n) begin
                     sub_len <= i_sub_len;
                     data_to_write <= i_data_write;
                     byte_len <= i_byte_len;
-            
+              
                     en_scl <= 1'b1;
                     reg_sda_o <= 1'b1;
-                    
+            
                     nack <= 1'b0;  
                     read_sub_addr_sent_flag <= 1'b0;
                     num_byte_sent <= 0;
@@ -466,10 +388,8 @@ always@(posedge i_clk or negedge reset_n) begin
             end
             
             START: begin
-                en_wait_cntr <= 1'b1;
-                if(scl_prev & scl_curr & wait_cntr == START_IND_SETUP) begin   //check that scl is high, and that a necessary wait time is held
-                    en_wait_cntr <= 1'b0;                                       //set start bit for negedge of clock, and toggle for the clock to begin
-                    reg_sda_o <= 1'b0;
+                if(scl_prev & scl_curr & clk_i2c_cntr == START_IND_SETUP) begin   //check that scl is high, and that a necessary wait time is held
+                    reg_sda_o <= 1'b0;                                       //set start bit for negedge of clock, and toggle for the clock to begin
                     byte_sr <= {addr[7:1], 1'b0};                            //Don't need to check read or write, will always have write in a read request as well
                     state <= SLAVE_ADDR;
                     $display("DUT: I2C MASTER | TIMESTAMP: %t | MESSAGE: START INDICATION!", $time);
@@ -486,9 +406,7 @@ always@(posedge i_clk or negedge reset_n) begin
                 end
                 
                 if(scl_is_high) begin
-                    en_wait_cntr <= 1'b1;
-                    if(wait_cntr == START_IND_SETUP) begin   //Must wait minimum setup time
-                        en_wait_cntr <= 1'b0;
+                    if(clk_i2c_cntr == START_IND_SETUP) begin   //Must wait minimum setup time
                         scl_is_high <= 1'b0;
                         reg_sda_o <= 1'b0;
                         state <= SLAVE_ADDR;
@@ -514,9 +432,7 @@ always@(posedge i_clk or negedge reset_n) begin
                     end
                     
                     if(scl_is_low) begin
-                        en_wait_cntr <= 1'b1;
-                        if(wait_cntr == DATA_HOLD_TIME) begin
-                            en_wait_cntr <= 1'b0;
+                        if(clk_i2c_cntr == DATA_HOLD_TIME) begin
                             {byte_sent, cntr} <= {byte_sent, cntr} + 1;       //incr cntr, with overflow being caught (due to overflow, no need to set cntr to 0)
                             reg_sda_o <= byte_sr[7];                //send MSB
                             byte_sr <= {byte_sr[6:0], 1'b0};        //shift out MSB
@@ -553,9 +469,7 @@ always@(posedge i_clk or negedge reset_n) begin
                     end
                     
                     if(scl_is_low) begin
-                        en_wait_cntr <= 1'b1;
-                        if(wait_cntr == DATA_HOLD_TIME) begin
-                            en_wait_cntr <= 1'b0;
+                        if(clk_i2c_cntr == DATA_HOLD_TIME) begin
                             scl_is_low <= 1'b0;
                             {byte_sent, cntr} <= {byte_sent, cntr} + 1;       //incr cntr, with overflow being caught
                             reg_sda_o <=  byte_sr[7];               //send MSB
@@ -583,9 +497,7 @@ always@(posedge i_clk or negedge reset_n) begin
                     end
                     
                     if(scl_is_high) begin
-                        en_wait_cntr <= 1'b1;
-                        if(wait_cntr == START_IND_SETUP) begin
-                            en_wait_cntr <= 1'b0;
+                        if(clk_i2c_cntr == START_IND_SETUP) begin
                             valid_out <= 1'b0;
                             {byte_sent, cntr} <= cntr + 1;
                             data_in_sr <= {data_in_sr[6:0], sda_prev}; //MSB first
@@ -601,7 +513,7 @@ always@(posedge i_clk or negedge reset_n) begin
                     byte_sent <= 1'b0;
                     state <= ACK_NACK_RX;
                     reg_sda_o <= 1'bz;
-                    next_state <= (num_byte_sent == byte_len-1) ? STOP : GRAB_DATA;
+                    next_state <= STOP;  //only 1bit write
                     num_byte_sent <= num_byte_sent + 1'b1;
                     grab_next_data <= 1'b1;
                     $display("DUT: I2C MASTER | TIMESTAMP: %t | MESSAGE: WRITE BYTE #%d SENT!", $time, num_byte_sent);
@@ -612,9 +524,7 @@ always@(posedge i_clk or negedge reset_n) begin
                     end
                     
                     if(scl_is_low) begin //negedge
-                        en_wait_cntr <= 1'b1;
-                        if(wait_cntr == DATA_HOLD_TIME) begin
-                            en_wait_cntr <= 1'b0;
+                        if(clk_i2c_cntr == DATA_HOLD_TIME) begin
                             {byte_sent, cntr} <= {byte_sent, cntr} + 1;
                             reg_sda_o <= byte_sr[7];
                             byte_sr <= {byte_sr[6:0], 1'b0};        //shift out MSB
@@ -624,26 +534,13 @@ always@(posedge i_clk or negedge reset_n) begin
                 end
             end
             
-            GRAB_DATA: begin
-                if(grab_next_data) begin
-                    req_data_chunk <= 1'b1;
-                    grab_next_data <= 1'b0;
-                end
-                else begin
-                    state <= WRITE;
-                    byte_sr <= i_data_write;
-                end
-            end
-            
             ACK_NACK_RX: begin
                 if(!scl_prev & scl_curr) begin
                     scl_is_high <= 1'b1;
                 end
                 
                 if(scl_is_high) begin
-                    en_wait_cntr <= 1'b1;
-                    if(wait_cntr == START_IND_SETUP) begin
-                        en_wait_cntr <= 1'b0;
+                    if(clk_i2c_cntr == START_IND_SETUP) begin
                         if(!sda_prev) begin      //checking for the ack condition (its low)
                             state <= next_state;
                             $display("DUT: I2C MASTER | TIMESTAMP: %t | MESSAGE: rx ack encountered", $time);
@@ -666,9 +563,7 @@ always@(posedge i_clk or negedge reset_n) begin
                     scl_is_low <= 1'b1;
                 end
                 if(scl_is_low) begin          //negedge
-                    en_wait_cntr <= 1'b1;
-                    if(wait_cntr == DATA_HOLD_TIME) begin
-                        en_wait_cntr <= 1'b0;
+                    if(clk_i2c_cntr == DATA_HOLD_TIME) begin
                         if(ack_in_prog) begin 
                             reg_sda_o <= ack_nack;          //write ack until negedge of clk
                             ack_in_prog <= 1'b0;
@@ -696,9 +591,7 @@ always@(posedge i_clk or negedge reset_n) begin
                 end
                 
                 if(scl_is_high) begin
-                    en_wait_cntr <= 1'b1;
-                    if(wait_cntr == STOP_IND_SETUP) begin
-                        en_wait_cntr <= 1'b0;
+                    if(clk_i2c_cntr == STOP_IND_SETUP) begin
                         reg_sda_o <= 1'b1;
                         state <= RELEASE_BUS;
                         scl_is_high <= 1'b0;
@@ -707,9 +600,7 @@ always@(posedge i_clk or negedge reset_n) begin
             end
             
             RELEASE_BUS: begin
-                en_wait_cntr <= 1'b1;
-                if(wait_cntr == BUS_FREE_TIME) begin
-                    en_wait_cntr <= 1'b0;
+                if(clk_i2c_cntr == DIV_CLK-3) begin
                     en_scl <= 1'b0;
                     state <= IDLE;
                     reg_sda_o <= 1'bz;
@@ -723,6 +614,7 @@ always@(posedge i_clk or negedge reset_n) begin
     end
 end
 
+//syncronize sda and acl
 always@(negedge i_clk or negedge reset_n) begin
     if(!reset_n) begin
         {sda_curr, sda_prev} <= 0;
@@ -741,4 +633,5 @@ assign sda_o = reg_sda_o;
 assign scl_o = en_scl ? clk_i2c : 1'bz;     //the line will be pulled up to VCC so 1'bz is high
 endmodule
 /******************************************************************************************/
+
 

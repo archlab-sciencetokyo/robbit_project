@@ -40,7 +40,14 @@ Table 1 shows the parts required to build robbit.
 
 ### Chap. 3.1 Setting up CFU-Proving-Ground
 
-Please refer to [archlab-science-tokyo/CFU-Proving-Ground](https://github.com/archlab-sciencetokyo/CFU-Proving-Ground), clone the repository, and set it up for your environment.
+CFU-Proving-Ground has been added as a sub-module in the child repository.
+It must be built with the following command.
+
+```bash
+git submodule update --init --recursive 
+```
+
+Please refer to [archlab-science-tokyo/CFU-Proving-Ground](https://github.com/archlab-sciencetokyo/CFU-Proving-Ground), complete the CFU-Proving-Ground set-up.
 
 The following instructions assume that **CFU-Proving-Ground is ready to use**.
 This may take some time as it involves setting up the RISC-V compiler.

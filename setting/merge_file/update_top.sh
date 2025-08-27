@@ -8,7 +8,7 @@ if [ ! -f "$TARGET_FILE" ]; then
   exit 1
 fi
 
-cp "$TARGET_FILE" "$TARGET_FILE.bak"
+cp "$TARGET_FILE" "./setting./$TARGET_FILE.bak"
 
 
 sed -i.bak -E '

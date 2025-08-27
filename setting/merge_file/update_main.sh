@@ -12,7 +12,7 @@ NEW_TEXT_1="(r_dmem_addr[31:28]==4'h3) ? w_mmio_data: dmem_rdata"
 TARGET_TEXT_3='wire dmem_we ='
 NEW_TEXT_2=" \\& !(dbus_addr[29]);"
 TARGET_TEXT_4='input  wire clk_i,'
-DIFF_HEADER_FILE="./setting/main_header_diff.txt"
+DIFF_HEADER_FILE="./setting/merge_file/main_header_diff.txt"
 
 if [ ! -f "$TARGET_FILE" ]; then
     echo "Error: Not find '$TARGET_FILE'"
@@ -44,6 +44,6 @@ if [ -z "$LINE_NUM" ]; then
 fi
 
 sed -i.bak "${LINE_NUM}r ${DIFF_HEADER_FILE}" "$TARGET_FILE"
-mv *.bak ./setting/
+mv *.bak ./setting/merge_file
 
 echo "complete insertion"

@@ -29,10 +29,12 @@ else
     ' "$HEADER_FILE" > "$HEADER_FILE.tmp" && mv "$HEADER_FILE.tmp" "$HEADER_FILE"
 fi
 
+# check whether exist pg_lcd_prints_color in st7789.c
 if grep -q "$FUNC_NAME" "$SOURCE_FILE"; then
     echo "'$FUNC_NAME' already exist in '$SOURCE_FILE'"
 else
 
+# insert new function
 cat > "$TEMP_CODE_FILE" <<'EOF'
 
 void pg_lcd_prints_color(const char *str, char color) {
@@ -61,3 +63,7 @@ EOF
     ' "$SOURCE_FILE" > "$SOURCE_FILE.tmp" && mv "$SOURCE_FILE.tmp" "$SOURCE_FILE"
 fi
 
+echo "enter sed"
+sed -i 's#pg_lcd_draw_point(x + j, y + i, 0);#pg_lcd_draw_point(x + j, y + i, 1);#' "$SOURCE_FILE"
+sed -i 's#pg_lcd_fill(0);#pg_lcd_fill(1);#' "$SOURCE_FILE"
+echo "finish"
