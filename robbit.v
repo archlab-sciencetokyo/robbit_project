@@ -17,18 +17,7 @@ module robbit_control (
     `endif   
 );
 
-
-    ///// Parameter Tuning
-    // wire [31:0] w_vio0_target, w_vio1_Pgain, w_vio2_Igain;
-    // wire [31:0] w_vio3_Dgain, w_vio4_Vmin, w_vio5_Vmax;
-    // reg  [31:0] r_VIO_trgt = 40;
-    // reg  [31:0] r_VIO_pgin = 1500;
-    // reg  [31:0] r_VIO_igin = 16000; 
-    // reg  [31:0] r_VIO_dgin = 50;
-    // reg  [31:0] r_VIO_vmin = 45;
-    // reg  [31:0] r_VIO_vmax = 255;
-
-    `ifdef SYNTHESIS    
+`ifdef SYNTHESIS    
     wire [31:0] w_MPU_ayax, w_MPU_gxaz, w_MPU_gzgy;
     mpu6050 mpu6050(clk_i, rst_i, w_MPU_ayax, w_MPU_gxaz, w_MPU_gzgy, scl_io, sda_io);
 `else
@@ -76,17 +65,7 @@ module robbit_control (
                               (r_dmem_addr_i[7:0]==8'h04) ? r_MPU_gxaz :
                               (r_dmem_addr_i[7:0]==8'h08) ? r_MPU_gzgy :
                               (r_dmem_addr_i[7:0]==8'h10) ? r_timer    :
-                            //   (r_dmem_addr_i[7:0]==8'h20) ? r_VIO_trgt :
-                            //   (r_dmem_addr_i[7:0]==8'h24) ? r_VIO_pgin :
-                            //   (r_dmem_addr_i[7:0]==8'h28) ? r_VIO_igin :
-                            //   (r_dmem_addr_i[7:0]==8'h2c) ? r_VIO_dgin :
-                            //   (r_dmem_addr_i[7:0]==8'h30) ? r_VIO_vmin :
-                            //   (r_dmem_addr_i[7:0]==8'h34) ? r_VIO_vmax :
                               (r_dmem_addr_i[7:0]==8'h44) ? r_button   : 0;
-
-    //main.v
-    //reg rdata_sel = 0; always @(posedge clk) rdata_sel <= dbus_addr[30];
-    //assign dbus_rdata = (rdata_sel) ? perf_rdata : dmem_rdata;
 
 endmodule
 
