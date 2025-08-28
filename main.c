@@ -248,10 +248,10 @@ int *const TARGET_LED    = (int *)0x30000048;
 #define FILTER_GAIN  0.1  // 0.1, Madgwick Filter Gain
 #define LOOP_INIT    500  // 400, 
 /******************************************************************************************/
-#define TARGET       -60  // -71   // default:2.0 : pendulum target angle, horiazon = 0.0
-#define P_GAIN       1500  // 2000  // default:800
+#define TARGET       -65  // -71   // default:2.0 : pendulum target angle, horiazon = 0.0
+#define P_GAIN       1200  // 2000  // default:800
 #define I_GAIN       3000  // 3000  // default:200
-#define D_GAIN         0  // 50    // default: 75
+#define D_GAIN         38  // 50    // default: 75
 //#define TUNING       1  // enable parameter tuning
 /******************************************************************************************/
 typedef struct parameters

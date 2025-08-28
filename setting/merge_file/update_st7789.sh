@@ -17,6 +17,7 @@ if [ ! -f "$SOURCE_FILE" ]; then
     exit 1
 fi
 
+# -q : Check whether the row to be inserted already exists.
 if grep -q "$FUNC_NAME" "$HEADER_FILE"; then
     echo "'$FUNC_NAME' exist in '$HEADER_FILE'"
 else
@@ -66,4 +67,5 @@ fi
 echo "enter sed"
 sed -i 's#pg_lcd_draw_point(x + j, y + i, 0);#pg_lcd_draw_point(x + j, y + i, 1);#' "$SOURCE_FILE"
 sed -i 's#pg_lcd_fill(0);#pg_lcd_fill(1);#' "$SOURCE_FILE"
+sed -i 's/if (st7789_col != 0) //' "$SOURCE_FILE"
 echo "finish"

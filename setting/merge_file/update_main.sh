@@ -25,6 +25,7 @@ if [ ! -f "$DIFF_FILE" ]; then
     exit 1
 fi
 
+# -n : Display of line numbers, -F : Fixed string instead of regular expression
 LINE_NUM=$(grep -F -n "$TARGET_TEXT_1" "$TARGET_FILE" | cut -d':' -f1)
 if [ -z "$LINE_NUM" ]; then
     echo "Error: no target word in '$TARGET_FILE'"
@@ -32,6 +33,7 @@ if [ -z "$LINE_NUM" ]; then
     exit 1
 fi
 
+# insert new code
 sed -i.bak "${LINE_NUM}r ${DIFF_FILE}" "$TARGET_FILE"
 sed -i "/${TARGET_TEXT_2}/s/${OLD_TEXT_1}/${NEW_TEXT_1}/" "$TARGET_FILE"
 sed -i "/${TARGET_TEXT_3}/s/;/${NEW_TEXT_2}/" "$TARGET_FILE"
