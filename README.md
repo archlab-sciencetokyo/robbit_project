@@ -125,7 +125,7 @@ The parameters are shown on the display, so you can check the values as you chan
 <table>
     <tr>
         <td><img src="setting/image/display-sim.png" alt="Image 1" width="200"></td>
-        <td><img src="setting/image/display.jpg" alt="Image 2" width="200" style="transform: rotate(-90deg); margin: 0 30px;">
+        <td><img src="setting/image/display.jpg" alt="Image 2" width="200"></td>
     </tr>
 </table>
 
