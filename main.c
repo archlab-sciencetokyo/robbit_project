@@ -42,37 +42,7 @@ class Madgwick
         {
             if (!anglesComputed)
                 computeAngles();
-            return roll * 57.29578f;
-        }
-        float getPitch()
-        {
-            if (!anglesComputed)
-                computeAngles();
-            return pitch * 57.29578f;
-        }
-        float getYaw()
-        {
-            if (!anglesComputed)
-                computeAngles();
-            return yaw * 57.29578f + 180.0f;
-        }
-        float getRollRadians()
-        {
-            if (!anglesComputed)
-                computeAngles();
-            return roll;
-        }
-        float getPitchRadians()
-        {
-            if (!anglesComputed)
-                computeAngles();
-            return pitch;
-        }
-        float getYawRadians()
-        {
-            if (!anglesComputed)
-                computeAngles();
-            return yaw;
+            return roll * 57.29578f; //radian->degree
         }
 };
 

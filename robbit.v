@@ -1,9 +1,9 @@
 
-module robbit_control (
+module mmio_control (
     input  wire                        clk_i,
     input  wire                        rst_i,
     input  wire [1:0]                  button_i,
-    input  wire  [31:0]                 r_dmem_addr_i,
+    input  wire  [31:0]                r_dmem_addr_i,
     input  wire                        dbus_we_i,
     input  wire [`DBUS_ADDR_WIDTH-1:0] dbus_addr_i,
     input  wire [`DBUS_DATA_WIDTH-1:0] dbus_wdata_i,

@@ -9,7 +9,7 @@
     end
 
     wire [31:0] w_mmio_data;
-    robbit_control robbit(
+    mmio_control mmio(
         .clk_i          (clk),
         .rst_i          (rst),
         .button_i       (button),

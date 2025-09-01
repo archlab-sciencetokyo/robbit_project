@@ -240,17 +240,17 @@ endmodule
 //i2c_master module excluding multi-bit write
 module i2c_master(input             clk_i,              //input clock CLK_FREQ_MHZ
                   input             reset_n,            //reset 
-                  input      [7:0]  slave_addr_i,        //7 bit address(LSB is a bit explaing read or wite)
+                  input      [7:0]  slave_addr_i,       //7 bit address(LSB is a bit explaing read or wite)
                   input      [15:0] sub_addr_i,         //contains sub addr to send to slave, partition is decided on bit_sel
                   input      [23:0] byte_len_i,         //the bit length of read or write
-                  input      [7:0]  wdata_i,       //write data
+                  input      [7:0]  wdata_i,            //write data
                   input             req_trans,          //signal of start a new transaction
                   output reg [7:0]  data_out,
                   output reg        valid_out,
                   inout             scl_o,              //i2c clck line, output by this module, 400 kHz
                   inout             sda_o,              //i2c data line, set to 1'bz when not utilized (resistors will pull it high)
                   output reg        busy,               //when communicating with slave = 1, not communicating = 0
-                  output reg        nack               //Negative Acknowledgment(failed transaction)
+                  output reg        nack                //Negative Acknowledgment(failed transaction)
                   );
 
 //all state               
@@ -261,8 +261,8 @@ localparam [3:0] IDLE        = 4'd0,
                  SUB_ADDR    = 4'd4,
                  READ        = 4'd5,
                  WRITE       = 4'd6,
-                 ACK_NACK_RX = 4'd7,
-                 ACK_NACK_TX = 4'd8,
+                 ACK_NACK_SLAVE = 4'd7,
+                 ACK_NACK_MASTER = 4'd8,
                  STOP        = 4'h9,
                  RELEASE_BUS = 4'hA;
 
@@ -272,11 +272,11 @@ localparam [15:0] DIV_CLK = (`CLK_FREQ_MHZ*1_000_000)/(400_000*2);
 //communication restrictions
 localparam [7:0]  START_SETUP_TIME  = (600 * (`CLK_FREQ_MHZ*1_000)) / 1_000_000,  //start setup
                   START_HOLD_TIME   = (95 * (`CLK_FREQ_MHZ*1_000)) / 1_000_000,   //start hold
-                  DATA_HOLD_TIME   = (30 * (`CLK_FREQ_MHZ*1_000)) / 1_000_000,   //data hold
-                  DATA_SETUP_TIME  = (20 * (`CLK_FREQ_MHZ*1_000)) / 1_000_000,   //data setup
+                  DATA_HOLD_TIME   = (30 * (`CLK_FREQ_MHZ*1_000)) / 1_000_000,    //data hold
+                  DATA_SETUP_TIME  = (20 * (`CLK_FREQ_MHZ*1_000)) / 1_000_000,    //data setup
                   STOP_SETUP_TIME   = (600 * (`CLK_FREQ_MHZ*1_000)) / 1_000_000,  //stop setop
-                  LOW_PIREOD_TIME  = (1300 * (`CLK_FREQ_MHZ*1_000)) / 1_000_000, //scl low
-                  HIGH_PIREOD_TIME = (1200 * (`CLK_FREQ_MHZ*1_000)) / 1_000_000; //scl high(DIV_CLK-HIGH_PIREOD_TIME)
+                  LOW_PIREOD_TIME  = (1300 * (`CLK_FREQ_MHZ*1_000)) / 1_000_000,  //scl low(400KHz)
+                  HIGH_PIREOD_TIME = (1200 * (`CLK_FREQ_MHZ*1_000)) / 1_000_000;  //scl high(400KHz)
 
 reg [3:0]  state;
 reg [3:0]  next_state;
@@ -408,7 +408,7 @@ always@(posedge clk_i or negedge reset_n) begin
                     byte_sent <= 1'b0;                      
                     next_state <= read_sub_addr_sent_flag ? READ : SUB_ADDR; //sub_addr[15:8] was sent -> READ, not yet -> SUB_ADDR   
                     byte_sr <= sub_addr[15:8];              
-                    state <= ACK_NACK_RX;                  
+                    state <= ACK_NACK_SLAVE;                  
                     reg_sda_o <= 1'bz;                      
                     cntr <= 0;
                 end
@@ -432,7 +432,7 @@ always@(posedge clk_i or negedge reset_n) begin
             SUB_ADDR: begin
                 if(byte_sent & cntr[0]) begin
                     if(sub_len) begin                       //1 for 16 bit
-                        state <= ACK_NACK_RX;
+                        state <= ACK_NACK_SLAVE;
                         next_state <= SUB_ADDR;
                         sub_len <= 1'b0;                    //denote only want 8 bit next time
                         byte_sr <= sub_addr[7:0];           //set the byte shift register
@@ -446,7 +446,7 @@ always@(posedge clk_i or negedge reset_n) begin
                     
                     cntr <= 0;
                     byte_sent <= 1'b0;                      //deassert the flag
-                    state <= ACK_NACK_RX;                   //await for nack_ack
+                    state <= ACK_NACK_SLAVE;                   //await for nack_ack
                     reg_sda_o <= 1'bz;                      //release sda line
                 end
                 else begin
@@ -470,7 +470,7 @@ always@(posedge clk_i or negedge reset_n) begin
                     byte_sent <= 1'b0;          //reset flag
                     data_out  <= data_in_sr;    //put information in valid output
                     valid_out <= 1'b1;          //valid signal to master
-                    state <= ACK_NACK_TX;       //Send ack(Acknowledgment)
+                    state <= ACK_NACK_MASTER;       //Send ack(Acknowledgment)
 
                     //chek reading all bytes
                     next_state <= (num_byte_sent == byte_len-1) ? STOP : READ;      
@@ -498,7 +498,7 @@ always@(posedge clk_i or negedge reset_n) begin
                 if(byte_sent & cntr[0]) begin
                     cntr <= 0;
                     byte_sent <= 1'b0;
-                    state <= ACK_NACK_RX;
+                    state <= ACK_NACK_SLAVE;
                     reg_sda_o <= 1'bz;
                     next_state <= STOP;  //only 1bit write
                     num_byte_sent <= num_byte_sent + 1'b1;
@@ -521,7 +521,9 @@ always@(posedge clk_i or negedge reset_n) begin
                 end
             end
             
-            ACK_NACK_RX: begin
+            //get ack or nack from slave
+            //sda = 1'b1 -> nack, sda = 1'b0 -> ack
+            ACK_NACK_SLAVE: begin
                 //detect scl posedge
                 if(!scl_prev & scl_curr) begin
                     scl_is_high <= 1'b1;
@@ -544,7 +546,9 @@ always@(posedge clk_i or negedge reset_n) begin
                 end
             end
             
-            ACK_NACK_TX: begin
+            //send ack or nack from master to slave
+            //sda = 1'b1 -> nack, sda = 1'b0 -> ack
+            ACK_NACK_MASTER: begin
                 //detect scl nesedge
                 if(!scl_curr & scl_prev) begin
                     scl_is_low <= 1'b1;
