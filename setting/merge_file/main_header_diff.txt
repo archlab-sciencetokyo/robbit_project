@@ -9,4 +9,3 @@
     output wire motor_ain2, // motor driver
     output wire motor_pwma, // motor driver
     input  wire [1:0] button, //button
-    output reg  [1:0] led,

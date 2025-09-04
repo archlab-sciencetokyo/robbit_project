@@ -64,8 +64,6 @@ EOF
     ' "$SOURCE_FILE" > "$SOURCE_FILE.tmp" && mv "$SOURCE_FILE.tmp" "$SOURCE_FILE"
 fi
 
-echo "enter sed"
 sed -i 's#pg_lcd_draw_point(x + j, y + i, 0);#pg_lcd_draw_point(x + j, y + i, 1);#' "$SOURCE_FILE"
 sed -i 's#pg_lcd_fill(0);#pg_lcd_fill(1);#' "$SOURCE_FILE"
 sed -i 's/if (st7789_col != 0) //' "$SOURCE_FILE"
-echo "finish"

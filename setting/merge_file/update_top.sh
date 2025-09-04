@@ -21,8 +21,7 @@ sed -i.bak -E '
         .motor_ain1     (           ),\
         .motor_ain2     (           ),\
         .motor_pwma     (           ),\
-        .button         (           ),\
-        .led            (           )
+        .button         (           )
 }
 ' "$TARGET_FILE"
 

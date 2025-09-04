@@ -203,33 +203,30 @@ int *const MPU_ADDR_TIME = (int *)0x30000010;
 int *const MTR_ADDR_ctrl = (int *)0x30000040;
 ///// button
 int *const BUTTON_ADDR   = (int *)0x30000044;
-///// target flag
-int *const TARGET_LED    = (int *)0x30000048;
 
 /******************************************************************************************/
-#define FREQ         100  // 100, Operation frequency in Mz
-#define LOOP_HZ      220  // 200, Hz of main loop
-#define PWM_BASE      38  //  40, 
-#define V_MIN          0  //   0, PWM Min
-#define V_MAX        110  // 100, PWM Max (V_MAX + PWM_BASE is the real max)
-#define I_MAX        0.4  // 0.3, 
-#define PWM_GAIN     1.0  // 1.0, 
-#define STOPTHETA     50  //  20, stop angle difference from target
-#define FILTER_GAIN  0.1  // 0.1, Madgwick Filter Gain
-#define LOOP_INIT    500  // 400, 
+#define FREQ         100   // Operation frequency in Mz
+#define LOOP_HZ      1000  // Hz of main loop
+#define PWM_BASE      38   // Incremental PWM signal 
+#define V_MIN          0   // PWM Min
+#define V_MAX        110   // PWM Max (V_MAX + PWM_BASE is the real max)
+#define I_MAX        0.4   // Anti-windup 
+#define PWM_GAIN     1.0   // PWM signal magnitude
+#define STOPTHETA     50   // Motion Stop Angle
+#define FILTER_GAIN  0.1   // Madgwick Filter Gain
+#define LOOP_INIT    500   //  
 /******************************************************************************************/
-#define TARGET       -65  // -71   // default:2.0 : pendulum target angle, horiazon = 0.0
-#define P_GAIN       1200  // 2000  // default:800
-#define I_GAIN       3000  // 3000  // default:200
-#define D_GAIN         38  // 50    // default: 75
-//#define TUNING       1  // enable parameter tuning
+#define TARGET       -65   // robbit target angle * 10, horiazon = 0.0
+#define P_GAIN       1200  // Size of proportional element
+#define I_GAIN       3000  // Size of integral element
+#define D_GAIN         38  // Size of differential component
 /******************************************************************************************/
 typedef struct parameters
 {
     float Kp = P_GAIN;
     float Ki = I_GAIN;
     float Kd = D_GAIN;
-    float target = TARGET * 0.1; //
+    float target = TARGET * 0.1; 
     float Vmin = V_MIN;
     float Vmax = V_MAX;
     float pwm_base = PWM_BASE;
@@ -237,14 +234,12 @@ typedef struct parameters
 
 int main() {
     pg_lcd_reset();
-    Madgwick MadgwickFilter; // MPU6050 mpu;
+    Madgwick MadgwickFilter; 
 
-    Parameters p;
+    Parameters parameter;
     float roll, dt, P, I, D, preP;
     float power, pwm;
     int16_t ax, ay, az, gx, gy, gz;
-
-    int prev_power = 0;
 
     MadgwickFilter.begin((float)LOOP_HZ);
     MadgwickFilter.setGain(FILTER_GAIN);
@@ -264,6 +259,7 @@ int main() {
         loops++;
 
         {
+            //get acceralation and angular velocity 
             int16_t ax, ay, az, gx, gy, gz;
             unsigned int data;
             data = *(MPU_ADDR_ayax);
@@ -278,29 +274,29 @@ int main() {
             gy = data & 0xffff;
             gz = data >> 16;
 
+            //calculation of roll
             MadgwickFilter.updateIMU(-gz / 131.0, gy / 131.0, gx / 131.0,
                                      -az / 16384.0, ay / 16384.0, ax / 16384.0);
             roll = MadgwickFilter.getRoll();
         }
         
         // PID control
-        P = (p.target - roll) / 90.0;
+        P = (parameter.target - roll) / 90.0;
         if(fabsf(I + P * dt) < I_MAX)  I += P * dt;  // cap
         D = (P - preP) / dt;
         preP = P;
 
-        power = p.Kp * P + p.Ki * I + p.Kd * D;
+        power = parameter.Kp * P + parameter.Ki * I + parameter.Kd * D;
 
-        prev_power = power;
-
-        //pwm = (constrain(fabsf(power), p.Vmin, p.Vmax)); // Note
-        pwm = (fabsf(power)>p.Vmax) ? p.Vmax : fabsf(power);
-        pwm_int = (pwm + p.pwm_base) * PWM_GAIN;         // Note
+        //PWM control
+        pwm = (fabsf(power)>parameter.Vmax) ? parameter.Vmax : fabsf(power);
+        pwm_int = (pwm + parameter.pwm_base) * PWM_GAIN;         
         if (pwm_int > 255) pwm_int = 255;
 
+        //motor control signal
         int motor_ctrl = 0;
         if (loops <  LOOP_INIT ||
-            roll < (p.target - STOPTHETA) || (p.target + STOPTHETA) < roll) {
+            roll < (parameter.target - STOPTHETA) || (parameter.target + STOPTHETA) < roll) {
             power = pwm = pwm_int = P = I = D = 0;
             motor_ctrl = 0;
         }
@@ -310,6 +306,7 @@ int main() {
         
         *(MTR_ADDR_ctrl) = (pwm_int & 0xff) | (motor_ctrl << 16); // control motor
 
+        //Recording of elapsed time
         timer = *(MPU_ADDR_TIME);
         if(loops%100==0) {
             t2 = t1;
@@ -327,28 +324,28 @@ int main() {
             }
 
             if (param_select==1) { ///// target
-                if     (button == 1) p.target -= 0.1; // 0.001;
-                else if(button == 2) p.target += 0.1; // 0.001;
+                if     (button == 1) parameter.target -= 0.1; // 0.001;
+                else if(button == 2) parameter.target += 0.1; // 0.001;
             }
             if (param_select==2) { ///// P
-                if     (button == 1) p.Kp = p.Kp * 0.98;
-                else if(button == 2) p.Kp = p.Kp * 1.02;
+                if     (button == 1) parameter.Kp = parameter.Kp * 0.98;
+                else if(button == 2) parameter.Kp = parameter.Kp * 1.02;
             }
             if (param_select==3) { ///// I
-                if     (button == 1) p.Ki = p.Ki * 0.98;
-                else if(button == 2) p.Ki = p.Ki * 1.02;
+                if     (button == 1) parameter.Ki = parameter.Ki * 0.98;
+                else if(button == 2) parameter.Ki = parameter.Ki * 1.02;
             }
             if (param_select==4) { ///// D
-                if     (button == 1) p.Kd = p.Kd * 0.98;
-                else if(button == 2) p.Kd = p.Kd * 1.02;
+                if     (button == 1) parameter.Kd = parameter.Kd * 0.98;
+                else if(button == 2) parameter.Kd = parameter.Kd * 1.02;
             }
             if (param_select==5) { ///// PWM_BASE
-                if     (button == 1) p.pwm_base -= 1.0;
-                else if(button == 2) p.pwm_base += 1.0;
+                if     (button == 1) parameter.pwm_base -= 1.0;
+                else if(button == 2) parameter.pwm_base += 1.0;
             }
             if (param_select==6) { ///// Vmax
-                if     (button == 1) p.Vmax -= 1.0;
-                else if(button == 2) p.Vmax += 1.0;
+                if     (button == 1) parameter.Vmax -= 1.0;
+                else if(button == 2) parameter.Vmax += 1.0;
             }
         }
 
@@ -374,24 +371,53 @@ int main() {
         }
         char buf[32];
 
-        if(loops % 10 == 0){
-            pg_lcd_set_pos(13,0); sprintf_(buf, "%2d\n", param_select);    pg_lcd_prints(buf);
+        pg_lcd_set_pos(13,0); sprintf_(buf, "%2d\n", param_select);    pg_lcd_prints(buf);
+        switch (loops % 13)
+        {
+        case 0:
+            /* code */
             pg_lcd_set_pos(8, 1); sprintf_(buf, "%7.2f\n",roll);    pg_lcd_prints(buf);
+            break;
+        case 1:
             pg_lcd_set_pos(6, 2); sprintf_(buf, "%9.2f\n",  power); pg_lcd_prints(buf);
+            break;
+        case 2:
             pg_lcd_set_pos(6, 3); sprintf_(buf, "%9.2f\n",  pwm);   pg_lcd_prints(buf);
-            pg_lcd_set_pos(8, 5); sprintf_(buf, "%7.2f\n",p.target);pg_lcd_prints_color(buf, COLOR_CYAN);
-            pg_lcd_set_pos(8, 6); sprintf_(buf, "%7.2f\n",  p.Kp);  pg_lcd_prints_color(buf, COLOR_CYAN);
-            pg_lcd_set_pos(8, 7); sprintf_(buf, "%7.2f\n",  p.Ki);  pg_lcd_prints_color(buf, COLOR_CYAN);
-            pg_lcd_set_pos(8, 8); sprintf_(buf, "%7.2f\n",  p.Kd);  pg_lcd_prints_color(buf, COLOR_CYAN);
-            pg_lcd_set_pos(8, 9); sprintf_(buf, "%7.2f\n",  p.pwm_base);pg_lcd_prints_color(buf, COLOR_YELLOW);
-            pg_lcd_set_pos(8,10); sprintf_(buf, "%7.2f\n",  p.Vmax);  pg_lcd_prints_color(buf, COLOR_YELLOW);
+            break;
+        case 3:
+            pg_lcd_set_pos(8, 5); sprintf_(buf, "%7.2f\n",parameter.target);pg_lcd_prints_color(buf, COLOR_CYAN);
+            break;
+        case 4:
+            pg_lcd_set_pos(8, 6); sprintf_(buf, "%7.2f\n",  parameter.Kp);  pg_lcd_prints_color(buf, COLOR_CYAN);
+            break;
+        case 5:
+            pg_lcd_set_pos(8, 7); sprintf_(buf, "%7.2f\n",  parameter.Ki);  pg_lcd_prints_color(buf, COLOR_CYAN);
+            break;
+        case 6:
+            pg_lcd_set_pos(8, 8); sprintf_(buf, "%7.2f\n",  parameter.Kd);  pg_lcd_prints_color(buf, COLOR_CYAN);
+            break;
+        case 7:
+            pg_lcd_set_pos(8, 9); sprintf_(buf, "%7.2f\n",  parameter.pwm_base);pg_lcd_prints_color(buf, COLOR_YELLOW);
+            break;
+        case 8:
+            pg_lcd_set_pos(8,10); sprintf_(buf, "%7.2f\n",  parameter.Vmax);  pg_lcd_prints_color(buf, COLOR_YELLOW);
+            break;
+        case 9:
             pg_lcd_set_pos(5,11); sprintf_(buf, "%10d\n", loops);   pg_lcd_prints(buf);
+            break;
+        case 10:
             pg_lcd_set_pos(5,12); sprintf_(buf, "%10d\n", timer);   pg_lcd_prints(buf);
+            break;
+        case 11:
             pg_lcd_set_pos(5,13); sprintf_(buf, "%10d\n", (FREQ * 100000)/(t1 - t2)); pg_lcd_prints(buf);
+            break;
+        case 12:
             pg_lcd_set_pos(2,14);
             if (motor_ctrl==0) pg_lcd_prints_color("*** STOP***\n", COLOR_RED);
             if (motor_ctrl==1) pg_lcd_prints_color("*** FWD ***\n", COLOR_CYAN);
             if (motor_ctrl==2) pg_lcd_prints_color("*** REV ***\n", COLOR_BLACK);
+        default:
+            break;
         }
         /****************************************************************************/        
         

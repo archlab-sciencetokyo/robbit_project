@@ -7,7 +7,6 @@ module mmio_control (
     input  wire                        dbus_we_i,
     input  wire [`DBUS_ADDR_WIDTH-1:0] dbus_addr_i,
     input  wire [`DBUS_DATA_WIDTH-1:0] dbus_wdata_i,
-    output wire [1:0]                  led_o,
     output wire [31:0]                 w_mmio_data_o,
     output wire                        scl_io,
     `ifdef SYNTHESIS             
@@ -35,24 +34,11 @@ module mmio_control (
         r_MPU_gzgy <= w_MPU_gzgy;
     end
 
-
     reg [31:0] r_timer_cnt = 1;
     reg [31:0] r_timer = 0;
     always@(posedge clk_i) begin
         r_timer_cnt <= (r_timer_cnt==(`CLK_FREQ_MHZ*10)) ? 1 : r_timer_cnt + 1;
         if(r_timer_cnt==1) r_timer <= r_timer + 1;
-    end
-
-    ////ditect Horizontal state
-    wire [31:0] w_mem_roll_1 = dbus_we_i && (dbus_addr_i == 32'h3000_0048);
-
-    reg [1:0] led_reg;
-    assign led_o = led_reg;
-    always @(posedge clk_i) begin
-        if(w_mem_roll_1 == 1) begin
-            led_reg[1] <= dbus_wdata_i[0];
-            led_reg[0] <= dbus_wdata_i[1];
-        end
     end
 
 ////check button pushing
@@ -96,8 +82,7 @@ module tb6612fng (
     always@(posedge clk_i) if(r_cnt[27]) r_motor_stby <= 1;
     assign stby_o = r_motor_stby;
 
-    // 100MHz -> 100kHz,  2048 cycle
-    //wire [9:0] dutyx4 = {r_motor_ctrl[7:0], 2'b11};
+    // clk_i mhz / 2048 cycle < 100khz 
     wire [10:0] dutyx8 = {r_motor_ctrl[7:0], 3'b111};
     assign pwm_o  = (r_cnt[10:0] <= dutyx8);
     

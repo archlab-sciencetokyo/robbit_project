@@ -5,7 +5,6 @@
     
     always@(posedge clk) begin 
         r_dmem_addr <= dmem_addr;
-        led <= led_w;
     end
 
     wire [31:0] w_mmio_data;
@@ -17,7 +16,6 @@
         .dbus_we_i      (dbus_we),
         .dbus_addr_i    (dbus_addr),
         .dbus_wdata_i   (dbus_wdata),
-        .led_o          (led_w),
         .w_mmio_data_o  (w_mmio_data),
         .scl_io         (scl),
         .sda_io         (sda)

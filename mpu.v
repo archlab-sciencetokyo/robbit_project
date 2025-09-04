@@ -194,7 +194,6 @@ module mpu6050(
                        13: senser_14_data[7  :    0] <= data_read; // gz_l
                        default: ;
                     endcase
-                    //senser_14_data[8 +: (13-read_bytes)*8] <= data_read;  // {ax_h, ax_l, ay_h, ... temp_h, temp_l, gx_h ... gz_l} : 1byte x 14
                 end
 
                 ERROR: begin
@@ -311,7 +310,7 @@ reg        scl_is_high;
 reg        scl_is_low;
 
 
-//i2c_clock
+//i2c_clock_generation(400KHz)
 always@(posedge clk_i or negedge reset_n) begin
     if(!reset_n)
         {clk_scl_cntr, clk_scl} <= 17'b1;
@@ -331,7 +330,7 @@ end
 
 
 
-//Main FSM
+//main state
 always@(posedge clk_i or negedge reset_n) begin
     if(!reset_n) begin
         {data_out, valid_out} <= 0;
@@ -465,6 +464,7 @@ always@(posedge clk_i or negedge reset_n) begin
                 end
             end
             
+            //read data from slave(mpu-6050)
             READ: begin
                 if(byte_sent) begin
                     byte_sent <= 1'b0;          //reset flag
@@ -483,6 +483,7 @@ always@(posedge clk_i or negedge reset_n) begin
                         scl_is_high <= 1'b1;
                     end
                     
+                    //read one bit at a time.
                     if(scl_is_high) begin
                         if(clk_scl_cntr == START_SETUP_TIME) begin
                             valid_out <= 1'b0;
@@ -494,6 +495,7 @@ always@(posedge clk_i or negedge reset_n) begin
                 end
             end
             
+            //write data to slave(mpu-6050)
             WRITE: begin
                 if(byte_sent & cntr[0]) begin
                     cntr <= 0;
@@ -510,6 +512,7 @@ always@(posedge clk_i or negedge reset_n) begin
                         scl_is_low <= 1'b1;
                     end
                     
+                    //send MSB 
                     if(scl_is_low) begin //negedge
                         if(clk_scl_cntr == DATA_HOLD_TIME) begin
                             {byte_sent, cntr} <= {byte_sent, cntr} + 1;
