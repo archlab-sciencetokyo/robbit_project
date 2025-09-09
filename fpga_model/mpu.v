@@ -311,7 +311,8 @@ reg        scl_is_low;
 
 
 //i2c_clock_generation(400KHz)
-always@(posedge clk_i or negedge reset_n) begin
+//always@(posedge clk_i or negedge reset_n) begin
+always@(posedge clk_i) begin
     if(!reset_n)
         {clk_scl_cntr, clk_scl} <= 17'b1;
     else if(!en_scl)
@@ -331,7 +332,8 @@ end
 
 
 //main state
-always@(posedge clk_i or negedge reset_n) begin
+//always@(posedge clk_i or negedge reset_n) begin
+always@(posedge clk_i) begin
     if(!reset_n) begin
         {data_out, valid_out} <= 0;
         {busy, nack} <= 0;
@@ -612,7 +614,7 @@ always@(posedge clk_i or negedge reset_n) begin
 end
 
 //syncronize sda and acl
-always@(negedge clk_i or negedge reset_n) begin
+always@(negedge clk_i) begin
     if(!reset_n) begin
         {sda_curr, sda_prev} <= 0;
         {scl_curr, scl_prev} <= 0;

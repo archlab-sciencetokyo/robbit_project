@@ -206,7 +206,7 @@ int *const BUTTON_ADDR   = (int *)0x30000044;
 
 /******************************************************************************************/
 #define FREQ         100   // Operation frequency in Mz
-#define LOOP_HZ      1000  // Hz of main loop
+#define LOOP_HZ      220  // Hz of main loop
 #define PWM_BASE      38   // Incremental PWM signal 
 #define V_MIN          0   // PWM Min
 #define V_MAX        110   // PWM Max (V_MAX + PWM_BASE is the real max)

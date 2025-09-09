@@ -1,4 +1,4 @@
-# robbit
+# robbit(Cmod A7-35T)
 
 **robbit** is an easy-to-use, two-wheeled self-balancing robot that utilizes an FPGA.
 It is developed using the **Cmod A7-35T** FPGA and an open-source development environment called **CFU-Proving-Ground**.   

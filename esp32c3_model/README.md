@@ -1,27 +1,22 @@
-# robbit
+# robbit-ESP
+ 
+robbit-ESPはESP32-C3で制御する扱いやすいtwo-wheeled self-balancing robotである。
 
-**robbit** is an easy-to-use, two-wheeled self-balancing robot that utilizes an FPGA.
-It is developed using the **Cmod A7-35T** FPGA and an open-source development environment called **CFU-Proving-Ground**.   
-
-For more details on CFU-Proving-Ground, please see:
-[archlab-science-tokyo/CFU-Proving-Ground](https://github.com/archlab-sciencetokyo/CFU-Proving-Ground)
-
-The recommended OS is **Ubuntu Linux**.
-This project works with **Vivado 2024.1**.
-
-Please follow the development procedure below.
+robbit-ESPは部品の総額が安く，無線によるリアルタイムのパラメータチューニングが可能であるため開発が容易である。
 
 <table>
     <tr>
-        <td><img src="setting/image/bcar-structure-front.JPG" alt="画像1" width="200"></td>
-        <td><img src="setting/image/bcar-structure-side.JPG" alt="画像2" width="200"></td>
+        <td><img src="image/esp32c3_front.jpg" alt="画像1" width="200"></td>
+        <td><img src="image/esp32c3-structure-side.jpg" alt="画像2" width="200"></td>
 </table>
 
 -----
 
-## Chap. 1 Purchase of Parts
+## Chap. 1 部品購入
 
-Table 1 shows the parts required to build **robbit**.
+以下の表は **robbit(ESP32-C3モデル)** 組み立てに必要な部品である。
+ 
+記載されている部品をそろえる。
 
 | Part | Name | Quantity |
 | --- | ----- | --- |
@@ -31,126 +26,193 @@ Table 1 shows the parts required to build **robbit**.
 | Tires | Slim Tire Set (55mm Dia.) 70193| 1 |
 | Motor Driver | TB6612FNG | 1 |
 | Battery | EEMB Lithium-Ion Battery 653042 | 1 |
-| Display | 240×240 Display with ST7789 IC | 1 |
 | Plate | Universal Plate Set 70157 | 1 |
 
 -----
 
-## Chap. 2 Assembling the Robot
+## Chap. 2 robbit-ESPの組み立て
 
-Please see the manual below for information on assembling the **robbit**.
+### Step. 1 robbitの部品確認
 
-[setting/manual/mannual_robit](setting/manual/mannual_robbit.pdf)
+Chap. 1に示されている部品がすべてそろっていることを確認する。
 
------
+### Step. 2 robbitのシャーシ作成
 
-## Chap. 3 Environment Setup
-
-### Chap. 3.1 Clone the robbit repository 
-
-Clone the robbit repository into the same directory as CFU-Proving-Ground using the following command:
-
-```bash
-git clone git@github.com:archlab-sciencetokyo/robbit.git
-```
-### Chap. 3.2 Setting up CFU-Proving-Ground
-
-CFU-Proving-Ground has been added as a sub-module in the child repository.
-It must be built with the following command.
-
-```bash
-git submodule update --init --recursive 
-```
-
-Please refer to [archlab-science-tokyo/CFU-Proving-Ground](https://github.com/archlab-sciencetokyo/CFU-Proving-Ground), complete the CFU-Proving-Ground set-up.
-
-The following instructions assume that **CFU-Proving-Ground is ready to use**.
-This may take some time as it involves setting up the RISC-V compiler.
-
-### Chap. 3.3 Integrating with the robbit Environment
-
-Please, integrate the robbit repository with the CFU-Proving-Ground repository using the following commands:
-
-```bash
-make init
-```
-
-If you want to revert this repository to its pre-integration state, enter the following command
-
-```bash
-make reset 
-```
-
------
-
-## Chap. 4 Simulation and Bitstream Generation
-
-Compile the program with the following command:
-
-```bash
-make
-```
-
-robbit allows you to view real-time information, such as parameters, on its display. You can also check the display output in a simulation using the following command:
-
-```bash
-make drun
-```
-
-When this command is executed, the following simulation results are output
-
-![display_sim](setting/image/display-sim.png)
-
-When you are ready to program the FPGA, you need to generate a bitstream. Generate it with the following command:
-
-```bash
-make bit
-```
-
------
-
-## Chap. 5 Parameter tuning
-
-Of course. Here is the English translation in Markdown format.
-
------
-
-The **robbit** allows for real-time parameter tuning using the buttons connected to the Cmod A7-35T.
-Pressing Button 1 decreases the parameter's value, and pressing Button 0 increases it.
-Pressing both buttons at the same time changes the selected parameter.
-
-The parameters are shown on the display, so you can check the values as you change them.
+まずはバッテリーと充電モジュールに導線を下図のようにはんだ付けする。
+はんだ付けをした後は、バッテリーを充電モジュールと接続し充電する。
+充電モジュールはバッテリーの充電が不十分だと赤色にLEDを点灯させ、充電が完了すると青色にLEDを点灯させる。
 
 <table>
     <tr>
-        <td><img src="setting/image/display-sim.png" alt="Image 1" width="200"></td>
-        <td><img src="setting/image/display.jpg" alt="Image 2" width="200"></td>
-    </tr>
+    <td><img src="./image/battery_empty.jpg" alt= "battery_empty" width=200 height=390></td>
+    <td><img src="./image/battery_full.jpg" alt="battery_full" width=200>
 </table>
 
-The number displayed to the right of **Self-Bcar v3** indicates the number of the parameter being controlled.
-The adjustable parameters shown on the display and their corresponding numbers are as follows:
+次にユニバーサルプレートを切断する。
+ユニバーサルプレートの大きさはこの後制作する制御モジュールの大きさに合わせるとよい。
+また、下図のように制御モジュールを接着する部分を用意しておく。
 
-| Parameter | Parameter Number | Explanation |
-| --------- | :--------------: | ----------- |
-| target    |        1         | Target angle |
-| P\_gain    |        2         | Proportional gain |
-| I\_gain    |        3         | Integral gain |
-| D\_gain    |        4         | Derivative gain |
-| PWM\_Base  |        5         | Minimum PWM signal value (motor's minimum speed) |
-| V\_max     |        6         | Maximum PWM signal value (motor's maximum speed) |
+<table>
+    <tr>
+    <td><img src="./image/plate_front.jpg" alt="" width=200></td>
+    <td><img src="./image/plate_top.jpg" alt="" width=200>
+</table>
+
+TAMIYAのMini Motor Standard Gearbox 70188とSlim Tire Set (55mm Dia.) 70193を作成する。
+
+TAMIYAのMini Motor Standard Gearbox 70188の[組み立てマニュアル](./image/tamiya__gearbox_mannual.pdf)を参考にしてほしい。
+組み立てに必要な部品や作業は黄色で色付けしてある。
+モータが完成したら、バッテリーと接続し問題なく回転するか確認する。
+
+
+最後に，ユニバーサルプレートにバッテリーとモータを取り付けるとシャーシが完成する。
+
+<table>
+    <tr>
+    <td><img src="./image/chassis_front.jpg" alt= "battery_empty" width=200></td>
+    <td><img src="./image/chassis_back.jpg" alt="battery_full" width=200>
+</table>
+
+### Step. 3 制御モジュールの作成
+
+モータドライバのVM, VCC, GND, AO1, A02にヘッダピンをはんだ付けをする
+
+<img src="./image/tb6612.png" width="500">
+
+同様にIMUモジュールにピンヘッダをはんだ付けする。
+IMUモジュールはVCC, GND, SCL, SDAをつなげば動作するが，安定性向上のためPmodの接続部分にはすべてヘッダピンをはんだ付けする。
+
+<img src="./image/mpu6050.png" width="500">
+
+ブレットボードまたは、ユニバーサル基盤を用意する。
+
+用意したブレットボードまたは基盤に回路図を参考に配線、はんだ付けをする。
+
+<img src="./image/robbit_circuit.png" width="500">
+
+### Step. 4 robbitの組み立て
+
+シャーシと制御モジュールを取り付け，バッテリーとモータを配線するとrobbitが完成する。
 
 -----
 
-The meanings of the other numerical values are as follows:
+## Chap. 3 環境構築と書き込み
 
-| Parameter | Explanation |
-| --------- | ----------- |
-| roll      | Body angle of the robbit |
-| power     | Result of the PID control calculation |
-| PWM       | PWM control signal |
-| loops     | Angle calculation count |
-| timer     | Elapsed time since power-on |
-| freq      | Frequency of the software's while loop |
+### Step. 1 Arudino IDEのダウンロード
+
+ESP32-C3の書き込みには，Arduino IDEを使用する．
+
+Arudino IDEをインストールしていない場合は，[ダウンロードページ](https://www.arduino.cc/en/software/)からダウンロードする．
+
+インストールが完了したら，リポジトリにある**robbit-esp.ino**を開いて，Step. 2に進む．
+
+### Step. 2 書き込み準備
+
+まずは，ESP32-C3ボードを使えるように設定する．
+
+1. `File` -> `Preference` -> `Setting` -> `Additional boards manager URLs`に以下のURLを設定する
+
+    https://raw.githubusercontent.com/espressif/arduino-esp32/gh-pages/package_esp32_index.json
+
+2. `Tools` -> `Board` -> `Board Manager`でBoard Managerを開き `esp32 by Espressif Systems`をダウンロードする
+3. `Tools` -> `Board` -> `esp32` -> `XIAO_ESP32C3` を選択する
+4. `Tools` -> `Port` でESP32-C3に対応するポート番号を設定する
+
+以上でボードの設定は全てである．
+
+次に，必要なライブラリをインストールする．
+
+`Tools` -> `Manage libraries`でライブライマネージャーを開ける．
+
+ライブラリマネージャで以下のライブラリをインストールする
+
+- MPU6050 by Electric Cats
+- Madgwick by Arduino
+- BluetoothSerial by Henry Abrahamsen
+
+Madgwickフィルタのライブラリ内にMadgwickAHRS.hというヘッダーファイルがあるので以下の関数を追加する
+
+    void setGain(float gain) { beta = gain; }
+
+ライブラリの設定は以上である．
+
+### Step .3 書き込み
+
+書き込む前に，以下のことを確認する。
+- PCとESP32-Cが接続する
+- `Tools` -> `Port` でESP32-C3に対応するポート番号を設定する
+- `Tools` -> `Board` -> `esp32` -> `XIAO_ESP32C3` を選択する
+
+上記の内容をすべて確認出来たら画面左上のUploadマークを押すとコンパイルが行われた後、書き込みが行われる。
+
+画面下のターミナルに以下のように出力されたら書き込みは成功になる。
+
+## Chap. 4 動作確認
+
+書き込みが終了したら、PCとESP32-C3の接続を解除し、robbitの電源を入れて動作を確認する。
+
+動作確認はカーペットのようなある程度摩擦が生じる環境で行うと良い。
+
+摩擦のない環境だと、その場で自立することが難しくなる。
+
+
+## Chap. 5 パラメータチューニング
+
+robbitのESP32-C3モデルはPCとのBLE通信によりパラメータチューニングを行える。
+以下にパラメータチューニングの手順を示す。
+
+### Step. 1 PCの環境構築
+
+パラメータチューニングを行うにはpythonライブラリのbleakを使用する。
+そのため、robbitとBLE通信を行うPC内にpythonの仮想環境を作成し、下記のコマンドでbleakをインストールする。
+
+    pip install bleak
+
+### Step. 2 robbitとのBLE接続
+
+robbitを起動し、少し待ってからble_connect.pyを実行する。
+
+実行すると、robbitとPCの無線での接続が行われる。
+接続に成功するとターミナルに下記の出力が表示される。
+この画面では，robbitに搭載するESp32-C3のサービスUUID(Service_uuid)、MACアドレス(MAC_adress)、Characteristic_uuidを表示している。
+Service_uuidとCharacteristic_uuidはinoファイルの冒頭で定義している値になっているはずである。
+
+![ble_connect_img](./image/ble_connect.png)
+
+この状態になると、パラメータチューニングが可能になる。
+
+### Step. 3 パラメータチューニング
+
+パラメータの変更は`input ("parameter number" "value") -> `の後に以下のような形式で入力すると実行される。
+
+    "パラメータ番号"␣"値"
+
+    ただし、␣は半角スペース
+
+パラメータ番号とは、変更可能なパラメータに割り振られている一連の番号である。対応表を以下に示す。
+
+| パラメータ | パラメータ番号 | 説明 |
+| --------- | :--------------: | ----------- |
+| target    |        1         | 車体の目標角度 |
+| P\_gain    |        2         | 比例要素のゲイン |
+| I\_gain    |        3         | 積分要素のゲイン |
+| D\_gain    |        4         | 微分要素のゲイン |
+| PWM\_Base  |        5         | PWM信号の増加値 |
+| V\_max     |        6         | PWM信号の最大値 |
+
+パラメータの変更が成功すると以下のように変更結果が出力される。
+
+下記の画像では`6 200`と入力しているため、パラメータ番号が6のV_MAXが200に変わっている。
+
+![par_setting](./image/par_set.png)
+
+以上の手順でパラメータチューニングを行うことができる。
+
+現状のパラメータを確認したい場合は、`input ("parameter number" "value") -> `に`r`を入力すると確認できる。
+
+![par_read](./image/par_read.png)
+
+robbitとのBLE接続を解除したい場合には，`input ("parameter number" "value") -> `に`e`を入力すると確認できる。
+
 
 ## History
