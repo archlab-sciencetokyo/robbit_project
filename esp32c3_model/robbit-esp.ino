@@ -72,22 +72,9 @@ class MyCallbacks: public BLECharacteristicCallbacks {
       pwm_base = value;
     } else if(parameter == "6"){
       vmax = value;
-    } else{
-      //Serial.println("Please write parameter and value");
     }
-
-    //Serial.println(status);
   }
 
-  // void onRead(BLECharacteristic *pCharacteristic){
-
-  //   char r_buf[256];
-  
-  //   //sprintf(r_buf, "%d, %d, %d, %d, %d, %d\n", ax, ay, az, gx, gy, gz);
-  //   sprintf(r_buf, "%.2f, %.2f, %.2f, %.2f, %.2f, %.2f\n", target, Kp, Ki, Kd, pwm_base, vmax);
-  //   pCharacteristic->setValue(r_buf); 
-    
-  // }
   void onRead(BLECharacteristic *pCharacteristic) {
     
   }

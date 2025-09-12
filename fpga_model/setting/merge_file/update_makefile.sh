@@ -13,6 +13,7 @@ sed -i '/^#TARGET := .*/d' Makefile
 sed -i '/^TARGET/a CFU := CFU-Proving-Ground' Makefile
 sed -i 's/$(GCC)/$(GPP)/g' Makefile
 sed -i 's/^build:/build: prog/' Makefile
+sed -i 's#app/\*\.c \*\.c#app/\*\.c \*\.cpp#g' Makefile
 sed -i '/cp vivado\/main.runs\/impl_1\/main.bit build\/./a \\tcp vivado\/main.runs\/impl_1\/main.bin build\/.' Makefile
 sed -i '/^init:/,/^done/d' Makefile
 sed -i '/^reset-hard:/,/main.xdc/d' Makefile

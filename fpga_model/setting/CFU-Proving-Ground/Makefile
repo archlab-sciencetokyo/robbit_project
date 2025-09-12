@@ -9,8 +9,8 @@ VIVADO  := /tools/Xilinx/Vivado/2024.1/bin/vivado
 VPP     := /tools/Xilinx/Vitis/2024.1/bin/v++
 RTLSIM  := /tools/cad/bin/verilator
 
-TARGET := arty_a7
-#TARGET := cmod_a7
+# TARGET := arty_a7
+TARGET := cmod_a7
 #TARGET := nexys_a7
 
 USE_HLS ?= 0
