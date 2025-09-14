@@ -1,0 +1,3 @@
+[submodule "robbit/setting/CFU-Proving-Ground"]
+	path = robbit/setting/CFU-Proving-Ground
+	url = https://github.com/archlab-sciencetokyo/CFU-Proving-Ground.git
