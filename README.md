@@ -1,17 +1,31 @@
-# robbit
+# robbit_project
 
-**robbit** is an user-friendly, two-wheeled self-balancing robot that using an FPGA.
+**robbit_project**は，マイコンまたはFPGAを活用する扱いやすいTwo wheel self-balancing robot(TW-SBR)を作成するプロジェクトである．
 
-robbitにはマイコンのESP32-C3を使用するモデルと，FPGAのCmod A7-35Tを使用するモデルが存在する．
+FPGAを活用するTW-SBRは**robbit**，マイコンを活用するTW-SBRは**robbit-esp**と名付けている．
+
+組み立てにかかる費用は**robbit**は15,000円程度で，**robbit-esp**は5,000円程度で作成でき，他のTW-SBRと比較しても安価である．
+
+また，開発がしやすくなるように，マニュアルを用意しているので，ぜひ開発してみてほしい．
+
 
 ## 📁 プロジェクト構造
 
 本リポジトリの構成は以下の通りである．
 
-* `fpga_model/`: FPGAモデル開発環境
-    * `setting` : 環境構築用のプログラムを格納
-        * `CFU-Proving-Ground/`: CFU Proving Groundのリポジトリ
-        * `merge_file`: 環境構築用のファイル
-        * `mannual`: robbitの機体制作マニュアル
-* `esp32c3_model`: XIAO ESP32-C3モデルに書き込むプログラムを格納
+    .
+    └── robbit_project/
+        ├── robbit-esp/
+        │   ├── image
+        │   └── manual
+        └── robbit/
+            └── setting/
+                ├── image
+                ├── manual
+                └── mrege_file
 
+robbit-espフォルダには，robbit-espを開発するのに必要なプログラムやマニュアルが用意されている
+
+robbitフォルダには，robbitを開発するのに必要なプログラムやマニュアルが用意されている
+
+## 更新履歴
