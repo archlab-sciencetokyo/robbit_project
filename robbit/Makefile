@@ -8,7 +8,7 @@ init:
 reset:
 	make clean
 	rm ./app/my_printf* 
-	rm *.txt
+	rm -f *.txt
 	rm -rf app constr dispemu build config.vh main.v top.v cfu.v proc.v ./setting/merge_file/*.bak
 	cp ./setting/merge_file/Makefile.txt Makefile
 
@@ -19,10 +19,8 @@ merge:
 	cp -r ./setting/$(CFU)/app ./
 	cp -r ./setting/$(CFU)/dispemu ./
 	cp ./setting/$(CFU)/config.vh ./
-	cp ./setting/$(CFU)/main.v ./
-	cp ./setting/$(CFU)/top.v ./
-	cp ./setting/$(CFU)/cfu.v ./
-	cp ./setting/$(CFU)/proc.v ./
+	cp ./setting/$(CFU)/*.v ./
+	cp ./setting/$(CFU)/cfu_hls.c ./
 	if [ ! -f "$(filename)" ]; then\
 		cp ./setting/merge_file/my_printf* ./app; \
 	fi
