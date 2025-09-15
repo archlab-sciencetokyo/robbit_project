@@ -9,6 +9,7 @@ reset:
 	make clean
 	rm ./app/my_printf* 
 	rm -f *.txt
+	rm cfu_hls.c
 	rm -rf app constr dispemu build config.vh main.v top.v cfu.v proc.v ./setting/merge_file/*.bak
 	cp ./setting/merge_file/Makefile.txt Makefile
 
