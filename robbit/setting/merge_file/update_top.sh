@@ -1,6 +1,6 @@
 #!/bin/sh
 
-TARGET_FILE="top.v"
+TARGET_FILE="./CFU-Proving-Ground/top.v"
 
 if [ ! -f "$TARGET_FILE" ]; then
   echo "Error: target file '$TARGET_FILE' not found."
@@ -8,7 +8,7 @@ if [ ! -f "$TARGET_FILE" ]; then
   exit 1
 fi
 
-cp "$TARGET_FILE" "./setting./$TARGET_FILE.bak"
+cp "$TARGET_FILE" "./setting/merge_file/top.bak"
 
 
 sed -i.bak -E '

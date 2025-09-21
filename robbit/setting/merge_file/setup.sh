@@ -1,10 +1,10 @@
 #!/bin/bash
 
-# コマンドが失敗したら、ただちにスクリプトを終了する
+# finish script if there are errors
 set -e
 
-# 1. 編集元となるMakefileをコピーする
-cp ../../CFU-Proving-Ground/Makefile ./Makefile
+# 1. 編集元となるMakefileをコピー
+#cp ../../CFU-Proving-Ground/Makefile ./Makefile
 
 # 2. 更新スクリプトに実行権限があるか確認し、なければ付与する
 if [ ! -x ./update_makefile.sh ]; then

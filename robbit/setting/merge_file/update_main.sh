@@ -3,7 +3,7 @@
 set -e
 
 # setting
-TARGET_FILE="main.v"                      
+TARGET_FILE="./CFU-Proving-Ground/main.v"                      
 TARGET_TEXT_1='wire [`DBUS_DATA_WIDTH-1:0] dbus_rdata;' 
 DIFF_FILE="./setting/merge_file/main_diff.txt"                 
 TARGET_TEXT_2='assign dbus_rdata ='
@@ -46,6 +46,6 @@ if [ -z "$LINE_NUM" ]; then
 fi
 
 sed -i.bak "${LINE_NUM}r ${DIFF_HEADER_FILE}" "$TARGET_FILE"
-mv *.bak ./setting/merge_file
+mv ./CFU-Proving-Ground/*.bak ./setting/merge_file
 
 echo "complete insertion"

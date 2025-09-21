@@ -216,10 +216,10 @@ int *const BUTTON_ADDR   = (int *)0x30000044;
 #define FILTER_GAIN  0.1   // Madgwick Filter Gain
 #define LOOP_INIT    500   //  
 /******************************************************************************************/
-#define TARGET       -65   // robbit target angle * 10, horiazon = 0.0
+#define TARGET       -60   // robbit target angle * 10, horiazon = 0.0
 #define P_GAIN       1200  // Size of proportional element
 #define I_GAIN       3000  // Size of integral element
-#define D_GAIN         38  // Size of differential component
+#define D_GAIN         50  // Size of differential component
 /******************************************************************************************/
 typedef struct parameters
 {

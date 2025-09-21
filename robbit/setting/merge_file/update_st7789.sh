@@ -3,8 +3,8 @@
 set -e
 
 # setting
-HEADER_FILE="./app/st7789.h"
-SOURCE_FILE="./app/st7789.c"
+HEADER_FILE="./CFU-Proving-Ground/app/st7789.h"
+SOURCE_FILE="./CFU-Proving-Ground/app/st7789.c"
 FUNC_NAME="pg_lcd_prints_color"
 TEMP_CODE_FILE="./setting/merge_file/st7789_diff.txt"
 

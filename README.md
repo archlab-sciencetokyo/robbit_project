@@ -18,8 +18,9 @@ FPGAを活用するTW-SBRは**robbit**，マイコンを活用するTW-SBRは**r
         │   ├── image
         │   └── manual
         └── robbit/
+            ├── CFU-Proving-Ground/
             └── setting/
-                ├── image
+               ├── image
                 ├── manual
                 └── mrege_file
 
