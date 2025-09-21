@@ -7,8 +7,6 @@ dispemu/
 vivado*
 memd.txt
 memi.txt
-build.tcl
-main.xdc
 *.vcd
 vitis/
 cfu/
