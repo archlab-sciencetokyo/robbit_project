@@ -2,9 +2,9 @@
 
 **robbit_project**は，マイコンまたはFPGAを活用する扱いやすいTwo wheel self-balancing robot(TW-SBR)を作成するプロジェクトである．
 
-FPGAを活用するTW-SBRは**robbit**，マイコンを活用するTW-SBRは**robbit-esp**と名付けている．
+FPGAを活用するTW-SBRは**robbit**，マイコンを活用するTW-SBRは**robbit-esp**と呼ばれる．
 
-組み立てにかかる費用は**robbit**は15,000円程度で，**robbit-esp**は5,000円程度で作成でき，他のTW-SBRと比較しても安価である．
+組み立てにかかる費用は**robbit**は20,000円程度で，**robbit-esp**は5,000円程度で作成でき，他のTW-SBRと比較しても安価である．
 
 また，開発がしやすくなるように，マニュアルを用意しているので，ぜひ開発してみてほしい．
 
@@ -32,3 +32,7 @@ robbitフォルダには，robbitを開発するのに必要なプログラム�
 開発するロボットのフォルダにあるREADMEやマニュアルを参考にすると，開発しやすくなるだろう．
 
 ## 更新履歴
+
+### 2025/10/01
+
+- robbit, robbit-espのversion 1.0を公開
