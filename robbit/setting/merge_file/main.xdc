@@ -47,8 +47,8 @@ set_property -dict {PACKAGE_PIN W2 IOSTANDARD LVCMOS33} [get_ports motor_pwma]
 ###### LED, BUTTON
 set_property -dict {PACKAGE_PIN A18 IOSTANDARD LVCMOS33} [get_ports {button[0]}]
 set_property -dict {PACKAGE_PIN B18 IOSTANDARD LVCMOS33} [get_ports {button[1]}]
-set_property -dict {PACKAGE_PIN A17 IOSTANDARD LVCMOS33} [get_ports {led[0]}]
-set_property -dict {PACKAGE_PIN C16 IOSTANDARD LVCMOS33} [get_ports {led[1]}]
+## set_property -dict {PACKAGE_PIN A17 IOSTANDARD LVCMOS33} [get_ports {led[0]}]
+## set_property -dict {PACKAGE_PIN C16 IOSTANDARD LVCMOS33} [get_ports {led[1]}]
 
 #####
 create_pblock PB0

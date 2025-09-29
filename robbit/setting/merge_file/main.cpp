@@ -242,7 +242,6 @@ int *const BUTTON_ADDR   = (int *)0x30000044;
 #define I_MAX        0.4   // Anti-windup 
 #define PWM_GAIN     1.0   // PWM signal magnitude
 #define STOPTHETA     50   // Motion Stop Angle
-#define FILTER_GAIN  0.1   // Madgwick Filter Gain
 #define LOOP_INIT    500   //  
 /******************************************************************************************/
 #define TARGET       -60   // robbit target angle * 10, horiazon = 0.0
@@ -271,7 +270,6 @@ int main() {
     int16_t ax, ay, az, gx, gy, gz;
 
     MadgwickFilter.begin((float)LOOP_HZ);
-    MadgwickFilter.setGain(FILTER_GAIN);
     dt = 1.0 / (float)LOOP_HZ;
 
     unsigned int loops = 0;
