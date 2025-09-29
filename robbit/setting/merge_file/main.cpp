@@ -1,9 +1,40 @@
 /******************************************************************************************/
 /* Self Balancing Car Project since 2025-01      Copyright(c) 2025 Archlab. Science Tokyo */
-/* main.c version 2025-05-16b                                                             */
-/* Released under the MIT license https://opensource.org/licenses/mit                     */
-/* some functions are from Arduino library                                                */
+/* main.cpp version 2025-09-29                                                            */
+/*                                                                                        */
+/* This file is released under multiple licenses:                                         */
+/*                                                                                        */
+/* (1) MIT License applies to the original code written for this project.                 */
+/*     https://opensource.org/licenses/MIT                                                */
+/*                                                                                        */
+/* (2) This file also includes and modifies code from the MadgwickAHRS library:           */
+/*     - Original Author: Arduino LLC.                                                    */
+/*     - Original License: GNU Lesser General Public License v2.1 or later                */
+/*       https://www.gnu.org/licenses/old-licenses/lgpl-2.1.html                          */
+/*                                                                                        */
+/*     Portions of code from the following files have been incorporated and modified:     */
+/*       - MadgwickAHRS.h (class structure and method declarations)                       */
+/*       - MadgwickAHRS.c (algorithm implementation and mathematical functions)           */
+/*                                                                                        */
+/*     Modifications to MadgwickAHRS code made by Archlab. Science Tokyo (2025)           */
+/*                                                                                        */
+/* The original MadgwickAHRS code remains under LGPL v2.1+, and this file contains a      */
+/* combination of MIT-licensed and LGPL-licensed code. Users must comply with both        */
+/* licenses accordingly.                                                                  */
+/*                                                                                        */
+/* This file contains a combination of MIT-licensed original code and                     */
+/* code derived from the MadgwickAHRS library under the LGPL v2.1+.                       */
+/* Use of this file requires compliance with both licenses.                               */
+/*                                                                                        */
+/* This program is distributed in the hope that it will be useful,                        */
+/* but WITHOUT ANY WARRANTY; without even the implied warranty of                         */
+/* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the                           */
+/* GNU Lesser General Public License for more details.                                    */
+/*                                                                                        */
+/* You should have received a copy of the GNU Lesser General Public License               */
+/* along with this program. If not, see https://www.gnu.org/licenses/.                    */
 /******************************************************************************************/
+
 #include <cstdint>
 #include <cmath>
 //#include <stdio.h>
@@ -36,16 +67,14 @@ class Madgwick
     public:
         Madgwick(void);
         void begin(float sampleFrequency) { invSampleFreq = 1.0f / sampleFrequency; }
-        void setGain(float gain) { beta = gain; } // add my function 2024-12-5
         void updateIMU(float gx, float gy, float gz, float ax, float ay, float az);
         float getRoll()
         {
             if (!anglesComputed)
                 computeAngles();
-            return roll * 57.29578f; //radian->degree
+            return roll * 57.29578f;
         }
 };
-
 /******************************************************************************************/
 // MadgwickAHRS.c
 /******************************************************************************************/
