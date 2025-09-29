@@ -3,234 +3,211 @@
 /* this code is not verified well                                                         */
 /******************************************************************************************/
 `include "config.vh"
-//I2C(センサとFPGAの通信)
 module mpu6050(
-    input clk_i,          //input clock CLK_FREQ_MHZ in config.vh
-    input rst_i,          //reset (active high)
-    output [31:0] data1_o, // MMIO
-    output [31:0] data2_o, // MMIO
-    output [31:0] data3_o, // MMIO
-    //MPU6050 Interface
-    inout scl,          //I2C SCL  PULLUP TRUE at Pmod
-    inout sda           //I2C SDA  PULLUP TRUE at Pmod
+    input clk_i,            //input clock CLK_FREQ_MHZ in config.vh
+    input rst_i,            //reset (active high)
+    output [31:0] data1_o,  //MMIO dara
+    output [31:0] data2_o,  //MMIO data
+    output [31:0] data3_o,  //MMIO data
+    inout scl,              //I2C SCL PULLUP TRUE at Pmod
+    inout sda               //I2C SDA PULLUP TRUE at Pmod
     );
 
-    reg [7:0] who_am_i;
-    reg [8*14-1:0] senser_14_data; // {ax, ay, az, temp, gx, gy, gz}
+    reg [7:0] r_whoami;
+    reg [8*14-1:0] r_sensor14data; // {ax, ay, az, temp, gx, gy, gz}
     
-    assign data1_o = {senser_14_data[95:80], senser_14_data[111:96]}; // ay, ax
-    assign data2_o = {senser_14_data[47:32], senser_14_data[ 79:64]}; // gx, az
-    assign data3_o = {senser_14_data[15: 0], senser_14_data[ 31:16]}; // gz, gy
+    assign data1_o = {r_sensor14data[95:80], r_sensor14data[111:96]}; // ay, ax
+    assign data2_o = {r_sensor14data[47:32], r_sensor14data[ 79:64]}; // gx, az
+    assign data3_o = {r_sensor14data[15: 0], r_sensor14data[ 31:16]}; // gz, gy
 
-    localparam [6:0] I2C_ADDR = 7'h68;
+    localparam [6:0] MPU6050_I2C_ADDR = 7'h68;
 
-    //State machine
-    localparam [3:0] SETUP              = 4'd0,
-                     WRITE_REQ          = 4'd1,
-                     WRITE_FINISH       = 4'd2,
-                     WHO_AM_I_AQ        = 4'd3,
-                     WHO_READ_REQ       = 4'd4,
-                     WHO_AWAIT_DATA     = 4'd5,
-                     WHO_LOAD_DATA_AQ   = 4'd6,
-                     SEN_14_DATA_REQ    = 4'd7,
-                     READ_REQ           = 4'd8,
-                     AWAIT_DATA         = 4'd9,
-                     INCR_DATA_AQ       = 4'd10,
-                     ERROR              = 4'd11;
+    //States
+    localparam [3:0] ST_WRITE_INIT_SETUP    = 4'd0,
+                     ST_WRITE_INIT_REQ      = 4'd1,
+                     ST_WRITE_INIT_DONE     = 4'd2,
+                     ST_READ_WHO_SETUP      = 4'd3,
+                     ST_READ_WHO_REQ        = 4'd4,
+                     ST_READ_WHO_AWAIT      = 4'd5,
+                     ST_READ_WHO_LOAD       = 4'd6,
+                     ST_READ_14_SETUP       = 4'd7,
+                     ST_READ_1BYTE_REQ      = 4'd8,
+                     ST_READ_1BYTE_AWAIT    = 4'd9,
+                     ST_READ_1BYTE_LOAD     = 4'd10,
+                     ST_ERROR               = 4'd11;
 
-    //Internal registers
-    reg [3:0 ] state;
-    reg [7:0 ] data_read;
-    reg        en_cntr;
-    reg [26:0] cntr;
-    reg [23:0] read_bytes;
-    reg        who_am_i_read;
-    reg        senser_14_read;
+    reg  [3:0 ] r_state;
+    reg  [7:0 ] r_readbyte;
+    reg  [26:0] r_delay_cnt;
+    reg  [23:0] r_readbyte_cnt;
 
-    //For I2C Master
-    reg  [7:0]  slave_addr;
-    reg  [15:0] sub_addr_i;
-    reg  [23:0] byte_len_i;
-    reg  [7:0]  wdata_i;
-    reg         request_transmit;
-    wire [7:0]  data_out;
-    wire        valid_out;
-    wire        busy;
-    wire        nack;
+    reg  [6:0 ] r_i2c_slave_addr = MPU6050_I2C_ADDR;
+    reg         r_i2c_rw;
+    reg  [15:0] r_i2c_sub_addr;
+    reg  [23:0] r_i2c_byte_len;
+    reg  [7:0 ] r_i2c_wdata;
+    reg         r_i2c_req_trans;
+    wire [7:0 ] w_i2c_data_out;
+    wire        w_i2c_valid_out;
+    wire        w_i2c_busy;
+    wire        w_i2c_nack;
 
-    //State machine for setup and 1 second reads of Temperature
-    always@(posedge clk_i or posedge rst_i) begin
-        //Set all regs to a known state
+    always@(posedge clk_i) begin
         if(rst_i) begin
-            //For I2C Driver Regs
-            slave_addr <= {I2C_ADDR, 1'b1};     //Pretty much always do reads for this module
-            {sub_addr_i, byte_len_i} <= 0;
-            {wdata_i, request_transmit} <= 0;
-
-            //For internal regs
-            state <= SETUP;
-            {read_bytes, data_read, who_am_i_read, senser_14_read} <= 0;
-            {cntr, en_cntr} <= 0;
-            {who_am_i, senser_14_data} <= 0;
-        end
-        else begin
-            cntr <= en_cntr ? cntr + 1 : 0;
-            who_am_i_read <= 1'b0;
-            case(state)
-                //release sleep mode 
-                SETUP: begin
-                    slave_addr <= {I2C_ADDR, 1'b0};     //LSB denotes write
-                    sub_addr_i <= 16'h6B;               //Register address is 0x6B for Device ID
-                    byte_len_i <= 23'd1;                //Denotes 1 bytes to read
-                    wdata_i <= 8'b0;               //Write 0000_0000
-                    state <= WRITE_REQ;
-                    request_transmit <= 1'b1;
+            r_state <= ST_WRITE_INIT_SETUP;
+            r_readbyte <= 'h0;
+            r_readbyte_cnt <= 'h0;
+            r_delay_cnt <= 'h0;
+            r_i2c_rw <= 1'b1;
+            r_i2c_sub_addr <= 'h0;
+            r_i2c_byte_len <= 'h0;
+            r_i2c_wdata <= 'h0;
+            r_i2c_req_trans <= 'h0;
+            r_whoami <= 'h0;
+            r_sensor14data <= 'h0;
+        end else if(w_i2c_busy & w_i2c_nack) begin
+            r_state <= ST_ERROR;
+        end else begin
+            case(r_state)
+                ST_WRITE_INIT_SETUP: begin
+                    r_state <= ST_WRITE_INIT_REQ;
+                    r_i2c_rw <= 1'b0;                       //Write
+                    r_i2c_sub_addr <= 16'h6B;               //PWR_MGMT_1 in MPU6050 (include SLEEP flag)
+                    r_i2c_byte_len <= 23'd1;                //Write 1byte
+                    r_i2c_wdata <= 8'b0;                    //Write 0000_0000 (relese SLEEP)
+                    r_i2c_req_trans <= 1'b1;                //Request transmit
                 end
 
-                WRITE_REQ: begin
-                    if(busy) begin
-                        state <= WRITE_FINISH;
-                        request_transmit <= 1'b0;
-                        en_cntr <= 1'b1;
+                ST_WRITE_INIT_REQ: begin
+                    if(w_i2c_busy) begin
+                        r_state <= ST_WRITE_INIT_DONE;
+                        r_i2c_req_trans <= 1'b0;
                     end
                 end
 
-                WRITE_FINISH: begin
-                    if(!busy) begin
-                        state <= WHO_AM_I_AQ;
+                ST_WRITE_INIT_DONE: begin
+                    if(!w_i2c_busy) begin
+                        r_state <= ST_READ_WHO_SETUP;
+                        r_delay_cnt <= 'h0;
                     end
                 end
 
-                WHO_AM_I_AQ: begin
-                    if(cntr == 100_000_000) begin //1 sec delay
-                        en_cntr <= 1'b0;
-                        slave_addr <= {I2C_ADDR, 1'b1};     //LSB denotes read
-                        sub_addr_i <= 16'h75;               //Register address is 0x75 for WHO AM I
-                        byte_len_i <= 23'd1;                //Denotes 1 bytes to read
-                        wdata_i <= 8'b0;               //Nothing to write, this is a read
-                        state <= WHO_READ_REQ;
-                        request_transmit <= 1'b1;
-                        read_bytes <= 0;
+                ST_READ_WHO_SETUP: begin
+                    if(r_delay_cnt == 27'd100_000_000) begin //Delay for IMU setup
+                        r_state <= ST_READ_WHO_REQ;
+                        r_readbyte_cnt <= 'h0;
+                        r_i2c_rw <= 1'b1;                       //Read
+                        r_i2c_sub_addr <= 16'h75;               //WHO_AM_I in MPU6050
+                        r_i2c_byte_len <= 23'd1;                //Read 1byte
+                        r_i2c_req_trans <= 1'b1;                //Request transmit
+                    end
+                    r_delay_cnt <= r_delay_cnt + 'h1;
+                end
+
+                ST_READ_WHO_REQ: begin
+                    if(w_i2c_busy) begin
+                        r_state <= ST_READ_WHO_AWAIT;
+                        r_i2c_req_trans <= 1'b0;
                     end
                 end
 
-                WHO_READ_REQ: begin
-                    if(busy) begin
-                        state <= WHO_AWAIT_DATA;
-                        request_transmit <= 1'b0;
-                        en_cntr <= 1'b1;
+                ST_READ_WHO_AWAIT: begin
+                    if(w_i2c_valid_out) begin
+                        r_state <= ST_READ_WHO_LOAD;
+                        r_readbyte <= w_i2c_data_out;
                     end
                 end
 
-                WHO_AWAIT_DATA: begin
-                    if(valid_out) begin
-                        state <= WHO_LOAD_DATA_AQ;
-                        data_read <= data_out;
+                ST_READ_WHO_LOAD: begin
+                    r_state <= ST_READ_14_SETUP;
+                    r_whoami <= r_readbyte;
+                end
+
+                ST_READ_14_SETUP: begin
+                    if(!w_i2c_busy) begin // Wait until w_i2c_busy is 0 in order to verify I2C master is IDLE
+                        r_state <= ST_READ_1BYTE_REQ;
+                        r_readbyte_cnt <= 'h0;
+                        r_i2c_rw <= 1'b1;                       //Read
+                        r_i2c_sub_addr <= 16'h3B;               //ACCEL_XOUT_H in MPU6050
+                        r_i2c_byte_len <= 23'd14;               //Read 14bytes
+                        r_i2c_req_trans <= 1'b1;                //Request transmit
                     end
                 end
 
-                WHO_LOAD_DATA_AQ: begin
-                    state <= SEN_14_DATA_REQ;//TEMP_DATA_AQ;
-                    who_am_i_read <= 1'b1;
-                    who_am_i <= data_read;
-                end
-
-                SEN_14_DATA_REQ: begin
-                    if(!busy) begin
-                    // wait until busy is 0 (and valid out is 0) : busy is 1 (READ_REQ~ I2C:RELEASE), (valid is 1 (AWAIT_DATA~)
-                    // wait til busy is 0 in order to verify I2C master is IDLE state
-                        en_cntr <= 1'b0; //  =: cntr <= 0
-                        slave_addr <= {I2C_ADDR, 1'b1};     //LSB denotes read
-                        sub_addr_i <= 16'h3B;               //Register address is 0x3B for ACCEL_XOUT_H
-                        byte_len_i <= 23'd14;                //Denotes 14 bytes to read
-                        wdata_i <= 8'b0;               //Nothing to write, this is a read
-                        state <= READ_REQ;
-                        request_transmit <= 1'b1;
-                        read_bytes <= 0;
+                ST_READ_1BYTE_REQ: begin
+                    if(w_i2c_busy) begin // Wait until i2c master start communicating
+                        r_state <= ST_READ_1BYTE_AWAIT;
+                        r_i2c_req_trans <= 1'b0;
                     end
                 end
 
-                READ_REQ: begin
-                    if(busy) begin // wait until i2c master start communicating
-                        state <= AWAIT_DATA;
-                        request_transmit <= 1'b0;
-                        en_cntr <= 1'b1;
+                ST_READ_1BYTE_AWAIT: begin
+                    if(w_i2c_valid_out) begin // Wait until data comes from slave
+                        r_state <= ST_READ_1BYTE_LOAD;
+                        r_readbyte <= w_i2c_data_out;
                     end
                 end
 
-                AWAIT_DATA: begin
-                    if(valid_out) begin // wait until data comes from slave
-                        state <= INCR_DATA_AQ;
-                        data_read <= data_out;
-                    end
-                end
-
-                INCR_DATA_AQ: begin
-                    if(read_bytes == byte_len_i-1) begin
-                        state <= SEN_14_DATA_REQ;
-                        senser_14_read <= 1'b1;
+                ST_READ_1BYTE_LOAD: begin
+                    if(r_readbyte_cnt == r_i2c_byte_len-1) begin
+                        r_state <= ST_READ_14_SETUP;
                     end
                     //else begin
-                    else if (!valid_out) begin
-                    // wait !valid_out from i2c master but maybe it is in void
-                    // at i2c master, valid_out asserted only 1 clk in my understanding.
-                        read_bytes <= read_bytes + 1;
-                        state <= AWAIT_DATA;
+                    else if (!w_i2c_valid_out) begin // Wait !w_i2c_valid_out from i2c master but maybe it is in void
+                        r_state <= ST_READ_1BYTE_AWAIT;
+                        r_readbyte_cnt <= r_readbyte_cnt + 'h1;
                     end
-                    case(read_bytes)
-                       0:  senser_14_data[111 : 104] <= data_read; // ax_h
-                       1:  senser_14_data[103 :  96] <= data_read; // ax_l
-                       2:  senser_14_data[95 :   88] <= data_read; // ay_h
-                       3:  senser_14_data[87 :   80] <= data_read; // ay_l
-                       4:  senser_14_data[79 :   72] <= data_read; // az_h
-                       5:  senser_14_data[71 :   64] <= data_read; // az_l
-                       6:  senser_14_data[63 :   56] <= data_read; // tp_h
-                       7:  senser_14_data[55 :   48] <= data_read; // tp_l
-                       8:  senser_14_data[47 :   40] <= data_read; // gx_h
-                       9:  senser_14_data[39 :   32] <= data_read; // gx_l
-                       10: senser_14_data[31 :   24] <= data_read; // gy_h
-                       11: senser_14_data[23 :   16] <= data_read; // gy_l
-                       12: senser_14_data[15 :    8] <= data_read; // gz_h
-                       13: senser_14_data[7  :    0] <= data_read; // gz_l
+                    case(r_readbyte_cnt)
+                       0:  r_sensor14data[111 : 104] <= r_readbyte; // ax_h
+                       1:  r_sensor14data[103 :  96] <= r_readbyte; // ax_l
+                       2:  r_sensor14data[95 :   88] <= r_readbyte; // ay_h
+                       3:  r_sensor14data[87 :   80] <= r_readbyte; // ay_l
+                       4:  r_sensor14data[79 :   72] <= r_readbyte; // az_h
+                       5:  r_sensor14data[71 :   64] <= r_readbyte; // az_l
+                       6:  r_sensor14data[63 :   56] <= r_readbyte; // tp_h
+                       7:  r_sensor14data[55 :   48] <= r_readbyte; // tp_l
+                       8:  r_sensor14data[47 :   40] <= r_readbyte; // gx_h
+                       9:  r_sensor14data[39 :   32] <= r_readbyte; // gx_l
+                       10: r_sensor14data[31 :   24] <= r_readbyte; // gy_h
+                       11: r_sensor14data[23 :   16] <= r_readbyte; // gy_l
+                       12: r_sensor14data[15 :    8] <= r_readbyte; // gz_h
+                       13: r_sensor14data[7  :    0] <= r_readbyte; // gz_l
                        default: ;
                     endcase
                 end
 
-                ERROR: begin
-                    who_am_i <= 8'he9;
+                ST_ERROR: begin
+                    r_whoami <= 8'he9;
                 end
 
                 default:
-                    state <= SETUP;
+                    r_state <= ST_WRITE_INIT_SETUP;
             endcase
-
-            //Error checking
-            if(busy & nack) begin
-                state <= ERROR;
-            end
         end
     end
 
-    //Instantiate daughter modules 
-    i2c_master i_i2c_master(.clk_i          (clk_i),                   //input clock CLK_FREQ_MHZ in config.vh
-                            .reset_n        (!rst_i),                  //reset for creating a known start condition
-                            .slave_addr_i    (slave_addr),              //7 bit address, LSB is the read write bit, with 0 being write, 1 being read
-                            .sub_addr_i     (sub_addr_i),              //contains sub addr to send to slave, partition is decided on bit_sel
-                            .byte_len_i     (byte_len_i),              //denotes whether a single or sequential read or write will be performed (denotes number of bytes to read or write)
-                            .wdata_i        (wdata_i),            //Data to write if performing write action
-                            .req_trans      (request_transmit),        //denotes when to start a new transaction
+    /**************************************************/
+    // i2c master based on  chance189/I2C_Master      //
+    /**************************************************/
+    i2c_master i_i2c_master(.clk_i          (clk_i),                //input clock CLK_FREQ_MHZ in config.vh
+                            .reset_n        (!rst_i),               //reset for creating a known start condition
+                            .slave_addr_i   ({r_i2c_slave_addr, r_i2c_rw}),     //7 bit address, LSB is the read write bit, with 0 being write, 1 being read
+                            .sub_addr_i     (r_i2c_sub_addr),       //contains sub addr to send to slave, partition is decided on bit_sel
+                            .byte_len_i     (r_i2c_byte_len),       //denotes whether a single or sequential read or write will be performed (denotes number of bytes to read or write)
+                            .wdata_i        (r_i2c_wdata),          //Data to write if performing write action
+                            .req_trans      (r_i2c_req_trans),      //denotes when to start a new transaction
 
                             /** For Reads **/
-                            .data_out       (data_out),
-                            .valid_out      (valid_out),
+                            .data_out       (w_i2c_data_out),
+                            .valid_out      (w_i2c_valid_out),
 
                             /** I2C Lines **/
-                            .scl_o          (scl),                     //i2c clck line, output by this module, 400 kHz
-                            .sda_o          (sda),                     //i2c data line, set to 1'bz when not utilized (resistors will pull it high)
+                            .scl_o          (scl),                  //i2c clck line, output by this module, 400 kHz
+                            .sda_o          (sda),                  //i2c data line, set to 1'bz when not utilized (resistors will pull it high)
 
                             /** Comms to Master Module **/
-                            .busy           (busy),                    //denotes whether module is currently communicating with a slave
-                            .nack           (nack)
+                            .busy           (w_i2c_busy),           //denotes whether module is currently communicating with a slave
+                            .nack           (w_i2c_nack)
                             );  
 
 endmodule
