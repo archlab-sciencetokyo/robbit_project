@@ -1,6 +1,6 @@
 # robbit_project
 
-**robbit_project**は、マイコンまたはFPGAを活用する扱いやすいTwo-wheeled self-balancing robot(TW-SBR)を作成するプロジェクトである。
+**robbit_project**は、マイコンまたはFPGAを活用する扱いやすいtwo-wheeled self-balancing robot(TW-SBR)を作成するプロジェクトである。
 
 FPGAを活用するTW-SBRは**robbit**、マイコンを活用するTW-SBRは**robbit-esp**と呼ばれる。
 

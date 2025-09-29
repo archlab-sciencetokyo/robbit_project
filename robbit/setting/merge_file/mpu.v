@@ -15,7 +15,7 @@ module mpu6050(
 
     reg [7:0] r_whoami;
     reg [8*14-1:0] r_sensor14data; // {ax, ay, az, temp, gx, gy, gz}
-    
+
     assign data1_o = {r_sensor14data[95:80], r_sensor14data[111:96]}; // ay, ax
     assign data2_o = {r_sensor14data[47:32], r_sensor14data[ 79:64]}; // gx, az
     assign data3_o = {r_sensor14data[15: 0], r_sensor14data[ 31:16]}; // gz, gy
@@ -41,12 +41,14 @@ module mpu6050(
     reg  [26:0] r_delay_cnt;
     reg  [23:0] r_readbyte_cnt;
 
+    // Input for I2C Master
     reg  [6:0 ] r_i2c_slave_addr = MPU6050_I2C_ADDR;
     reg         r_i2c_rw;
     reg  [15:0] r_i2c_sub_addr;
     reg  [23:0] r_i2c_byte_len;
     reg  [7:0 ] r_i2c_wdata;
     reg         r_i2c_req_trans;
+    // Output from I2C Master
     wire [7:0 ] w_i2c_data_out;
     wire        w_i2c_valid_out;
     wire        w_i2c_busy;
