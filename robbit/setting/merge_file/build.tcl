@@ -4,7 +4,7 @@
 set top_dir [pwd]
 set proj_name main
 set part_name xc7a35ticpg236-1L
-set src_files [list $top_dir/config.vh $top_dir/proc.v $top_dir/cfu.v $top_dir/main.v $top_dir/mpu.v $top_dir/robbit.v]
+set src_files [list $top_dir/config.vh $top_dir/proc.v $top_dir/cfu.v $top_dir/main.v $top_dir/mpu.v $top_dir/robbit.v $top_dir/i2c_master.v]
 set nproc [exec nproc]
 
 # config.vhを開いて，CLK_FREQ_MHZが存在するか確認 -> 記憶する
