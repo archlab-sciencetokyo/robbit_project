@@ -2,6 +2,10 @@
 /* Self Balancing Car Project since 2025-01      Copyright(c) 2025 Archlab. Science Tokyo */
 /* Version (2025-05-21a) -> 2025-08-22c                                                   */
 /* Released under the MIT license https://opensource.org/licenses/mit                     */
+/*                                                                                        */
+/* This sketch uses the MadgwickAHRS library by Arduino LLC,                              */
+/* licensed under the GNU Lesser General Public License v2.1 or later.                    */
+/* https://github.com/arduino-libraries/MadgwickAHRS                                      */
 /******************************************************************************************/
 #include <Wire.h>
 #include "MPU6050.h"
