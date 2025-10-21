@@ -1,3 +1,8 @@
+/******************************************************************************************/
+/* robbit(Two-wheeled Self Balancing Car Project) since 2025-10      Copyright(c) 2025 Archlab. Science Tokyo */
+/* Released under the MIT license https://opensource.org/licenses/mit                             */
+/******************************************************************************************/
+
 module i2c_master(
     input             clk_i,             //input clock CLK_FREQ_MHZ
     input             rst_i,             //reset 
@@ -5,16 +10,16 @@ module i2c_master(
     input      [7:0]  reg_addr_i,        //contains sub addr to send to slave, partition is decided on bit_sel
     input      [4:0]  byte_len_i,        //the bit length of read or write
     input      [7:0]  wdata_i,           //write data
-    input             cmd_valid_i,          //signal of start a new transaction
+    input             cmd_valid_i,       
     input             write_valid_i,
     input             read_valid_i,
-    input             rw_mode_i,           //1: read, 0:write
-    output reg        cmd_ready,             //cmd_ready signal
+    input             rw_mode_i,         //1: read, 0:write
+    output reg        cmd_ready,         
     output reg        write_ready,
     output reg        read_ready,
     output reg [7:0]  data_out,
     output reg        valid_out,
-    inout             scl_o,             //i2c clck line, output by this module, 400 kHz
+    inout             scl_o,             //i2c clck line, output by this module
     inout             sda_o,             //i2c data line, set to 1'bz when not utilized (resistors will pull it high)
     output reg        busy,              //when communicating with slave = 1, not communicating = 0
     output reg        nack               //Negative Acknowledgment(failed transaction)
@@ -32,9 +37,8 @@ module i2c_master(
     reg [15:0] clk_scl_cntr;
     reg scl_low, scl_high;
 
-    localparam LOW_PIREOD_TIME  = 130,  //scl low(400KHz)
-               HIGH_PIREOD_TIME = 120,  //scl high(400KHz)
-               SETUP_TIME = 70,
+    localparam DIV_SCLCK = 200;
+    localparam SETUP_TIME = 70,
                DATA_HOLD_TIME = 5;
 
     //main state
@@ -55,7 +59,6 @@ module i2c_master(
     assign sda_o = sda_o_r;
     assign scl_o = en_scl ? clk_scl : 1'bz;    
 
-    localparam [15:0] DIV_SCLCK = 16'd125;
     always@(posedge clk_i) begin
         if(!rst_i) begin
             clk_scl_cntr <= 16'b0; 
@@ -156,7 +159,6 @@ module i2c_master(
                         scl_low <= 1'b0;
                         sda_o_r <= 1'b0;
                         state <= ACK_WAIT;
-                        //next_state <= (read_flag) ? READ : REG_ADDR_WRITE;
                         next_state <= (read_flag) ? READ_WAIT : REG_ADDR_WRITE;
                         bit_counter <= 4'd8;
                         slave_rw_r <= rw_mode_i ? {slave_addr_i, 1'b1} : slave_rw_r;
@@ -173,7 +175,6 @@ module i2c_master(
                             scl_low <= 1'b0;
                             sda_o_r <= 1'b0;
                             state <= ACK_WAIT;
-                            //next_state <= rw_mode_i ? REPEATED_START : WRITE; //1: restart->read, 0: write
                             next_state <= rw_mode_i ? REPEATED_START : WRITE_WAIT; //1: restart->read, 0: write
                             bit_counter <= 4'd8;
                     end else if(scl_negedge) begin  
@@ -253,7 +254,7 @@ module i2c_master(
 
                 ACK_SEND: begin //send ack to slave
                     //already scl is low.
-                    sda_o_r <= (byte_len_r == 1) ? 1'b1 : 1'b0; //ack or
+                    sda_o_r <= (byte_len_r == 1) ? 1'b1 : 1'b0; //ack or nack
 
                     if(scl_negedge) begin
                         sda_o_r <= (byte_len_r == 1) ? 1'b0 : 1'bz;

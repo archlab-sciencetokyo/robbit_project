@@ -1,16 +1,16 @@
 /******************************************************************************************/
-/* Self Balancing Car Project since 2025-01      Copyright(c) 2025 Archlab. Science Tokyo */
-/* this code is not verified well                                                         */
+/* robbit(Two-wheeled Self Balancing Car Project) since 2025-10      Copyright(c) 2025 Archlab. Science Tokyo */
+/* Released under the MIT license https://opensource.org/licenses/mit                             */
 /******************************************************************************************/
+
 `include "config.vh"
 //I2C(センサとFPGAの通信)
 module mpu6050(
-    input clk_i,          //input clock CLK_FREQ_MHZ in config.vh
-    input rst_i,          //reset (active high)
+    input clk_i,           //input clock CLK_FREQ_MHZ in config.vh
+    input rst_i,           //reset (active high)
     output [31:0] data1_o, // MMIO
     output [31:0] data2_o, // MMIO
     output [31:0] data3_o, // MMIO
-    //MPU6050 Interface
     inout scl,          //I2C SCL  PULLUP TRUE at Pmod
     inout sda           //I2C SDA  PULLUP TRUE at Pmod
     );
@@ -65,11 +65,10 @@ module mpu6050(
         //Set all regs to a known state
         if(rst_i) begin
             //For I2C Driver Regs
-            slave_addr <= I2C_ADDR;     //Pretty much always do reads for this module
+            slave_addr <= I2C_ADDR;     
             {sub_addr_i, byte_len_i} <= 0;
             {wdata_i, cmd_valid} <= 0;
             rw_mode <= 0;
-            //For internal regs
             state <= SETUP;
             {read_bytes, data_read, who_am_i_read, senser_14_read} <= 0;
             {cntr, en_cntr} <= 0;
@@ -82,11 +81,10 @@ module mpu6050(
                 //release sleep mode 
                 SETUP: begin
                     if(cmd_ready) begin
-                        slave_addr <= I2C_ADDR;     //LSB denotes write
+                        slave_addr <= I2C_ADDR;     
                         rw_mode <= 1'b0;            //write
                         sub_addr_i <= 8'h6B;        //Register address is 0x6B for Device ID
                         byte_len_i <= 5'd1;         //Denotes 1 bytes to read
-                        //wdata_i <= 8'b0;          //Write 0000_0000
                         state <= WRITE_REQ;
                         cmd_valid <= 1'b1;
                     end
@@ -112,10 +110,10 @@ module mpu6050(
                 WHO_AM_I_AQ: begin
                     if(cntr == 100_000_000) begin //1 sec delay
                         en_cntr <= 1'b0;
-                        slave_addr <= I2C_ADDR;     //LSB denotes read
-                        rw_mode <= 1'b1;
-                        sub_addr_i <= 8'h75;               //Register address is 0x75 for WHO AM I
-                        byte_len_i <= 5'd1;                //Denotes 1 bytes to read
+                        slave_addr <= I2C_ADDR;    
+                        rw_mode <= 1'b1;               //read
+                        sub_addr_i <= 8'h75;           //Register address is 0x75 for WHO AM I
+                        byte_len_i <= 5'd1;            //Denotes 1 bytes to read
                         wdata_i <= 8'b0;               //Nothing to write, this is a read
                         state <= WHO_READ_REQ;
                         cmd_valid <= 1'b1;
@@ -141,7 +139,7 @@ module mpu6050(
                 end
 
                 WHO_LOAD_DATA_AQ: begin
-                    state <= SEN_14_DATA_REQ;//TEMP_DATA_AQ;
+                    state <= SEN_14_DATA_REQ;
                     who_am_i_read <= 1'b1;
                     who_am_i <= data_read;
                 end
@@ -150,13 +148,11 @@ module mpu6050(
 
                 SEN_14_DATA_REQ: begin
                     if(cmd_ready) begin
-                    // wait until busy is 0 (and valid out is 0) : busy is 1 (READ_REQ~ I2C:RELEASE), (valid is 1 (AWAIT_DATA~)
-                    // wait til busy is 0 in order to verify I2C master is IDLE state
-                        en_cntr <= 1'b0; //  =: cntr <= 0
-                        slave_addr <= I2C_ADDR;     //LSB denotes read
-                        rw_mode <= 1'b1;
-                        sub_addr_i <= 8'h3B;               //Register address is 0x3B for ACCEL_XOUT_H
-                        byte_len_i <= 5'd14;                //Denotes 14 bytes to read
+                        en_cntr <= 1'b0; 
+                        slave_addr <= I2C_ADDR;     
+                        rw_mode <= 1'b1;               //read
+                        sub_addr_i <= 8'h3B;           //Register address is 0x3B for ACCEL_XOUT_H
+                        byte_len_i <= 5'd14;           //Denotes 14 bytes to read
                         wdata_i <= 8'b0;               //Nothing to write, this is a read
                         state <= READ_REQ;
                         cmd_valid <= 1'b1;
@@ -186,10 +182,7 @@ module mpu6050(
                         senser_14_read <= 1'b1;
                         read_valid <= 1'b0;
                     end
-                    //else begin
                     else if (!valid_out) begin
-                    // wait !valid_out from i2c master but maybe it is in void
-                    // at i2c master, valid_out asserted only 1 clk in my understanding.
                         read_bytes <= read_bytes + 1;
                         state <= AWAIT_DATA;
                     end
@@ -231,29 +224,22 @@ module mpu6050(
     i2c_master i_i2c_master(
         .clk_i          (clk_i),                   //input clock CLK_FREQ_MHZ in config.vh
         .rst_i          (!rst_i),                  //reset for creating a known start condition
-        .slave_addr_i   (slave_addr),              //7 bit address, LSB is the read write bit, with 0 being write, 1 being read
-        .reg_addr_i     (sub_addr_i),              //contains sub addr to send to slave, partition is decided on bit_sel
-        .byte_len_i     (byte_len_i),              //denotes whether a single or sequential read or write will be performed (denotes number of bytes to read or write)
-        .wdata_i        (wdata_i),            //Data to write if performing write action
-        .cmd_valid_i    (cmd_valid),        //denotes when to start a new transaction
+        .slave_addr_i   (slave_addr),              //7 bit slave address
+        .reg_addr_i     (sub_addr_i),              //8 bit register address 
+        .byte_len_i     (byte_len_i),              //number of bytes to read or write
+        .wdata_i        (wdata_i),                 //Data to write if performing write action
+        .cmd_valid_i    (cmd_valid),               //denotes when to start a new transaction
         .write_valid_i  (write_valid),
         .read_valid_i   (read_valid),
         .rw_mode_i      (rw_mode),
-
         .cmd_ready      (cmd_ready),
         .write_ready    (write_ready),
         .read_ready     (read_ready),  
-
-        /** For Reads **/
         .data_out       (data_out),
         .valid_out      (valid_out),
-
-        /** I2C Lines **/
-        .scl_o          (scl),                     //i2c clck line, output by this module, 400 kHz
-        .sda_o          (sda),                     //i2c data line, set to 1'bz when not utilized (resistors will pull it high)
-
-                            /** Comms to Master Module **/
-        .busy           (busy),                    //denotes whether module is currently communicating with a slave
+        .scl_o          (scl),                      //i2c clck line, output by this module, 400 kHz
+        .sda_o          (sda),                      //i2c data line, set to 1'bz when not utilized (resistors will pull it high)
+        .busy           (busy),                     //denotes whether module is currently communicating with a slave
         .nack           (nack)
     );  
 

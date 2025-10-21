@@ -1,6 +1,5 @@
     reg [31:0] r_dmem_addr = 0;
 
-    wire [1:0] led_w;
     wire [31:0] r_dmem_addr_w = r_dmem_addr;
     
     always@(posedge clk) begin 
