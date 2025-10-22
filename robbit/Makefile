@@ -16,7 +16,7 @@ reset:
 	rm -f ./setting/merge_file/*.bak
 	rm -f ./$(INIT_STAMP)
 	rm -rf ./CFU-Proving-Ground/build
-	rm -f ./CFU-Proving-Ground/main.cpp ./CFU-Proving-Ground/main.xdc ./CFU-Proving-Ground/build.tcl ./CFU-Proving-Ground/*.txt ./CFU-Proving-Ground/mpu.v ./CFU-Proving-Ground/robbit.v
+	rm -f ./CFU-Proving-Ground/main.cpp ./CFU-Proving-Ground/main.xdc ./CFU-Proving-Ground/build.tcl ./CFU-Proving-Ground/*.txt ./CFU-Proving-Ground/mpu.v ./CFU-Proving-Ground/robbit.v ./CFU-Proving-Ground/i2c_master.v
 	rm -f ./CFU-Proving-Ground/app/my_printf*
 filename = ./app/my_printf.c
 fileexists = $(shell ls | grep ${filename})

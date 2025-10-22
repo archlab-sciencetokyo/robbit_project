@@ -1,7 +1,7 @@
-/******************************************************************************************/
-/* robbit(Two-wheeled Self Balancing Car Project) since 2025-10 Copyright(c) 2025 Archlab. Science Tokyo /
-/ Released under the MIT license https://opensource.org/licenses/mit           */
-/******************************************************************************************/
+/*********************************************************************************************************/
+/* robbit(Two-wheeled Self Balancing Car Project) since 2025-10 Copyright(c) 2025 Archlab. Science Tokyo */
+/* Released under the MIT license https://opensource.org/licenses/mit                                    */
+/*********************************************************************************************************/
 
 module mmio_control (
     input  wire                        clk_i,
