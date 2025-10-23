@@ -19,3 +19,7 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
+
+The Madgwick filter programme used in this project is covered by the GNU Lesser General Public License.
+See this repository for more information: https://github.com/arduino-libraries/MadgwickAHRS/tree/master
+Read more about the GNU Lesser General Public License [here](robbit/setting/merge_file/Madgwick/COPYING.LESSER)
