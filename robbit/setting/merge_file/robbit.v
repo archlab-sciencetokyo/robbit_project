@@ -63,13 +63,13 @@ endmodule
 // (0,0) stop, (0,1) normal rotation, (1,0) reverse rotation, (1,1) brake
 /******************************************************************************************/
 module tb6612fng (
-    input  wire         clk_i,    
-    input  wire         we_i,     // dbus_addr==32'h3000_0040 & dbus_we
-    input  wire [31:0]  ctrl_i,   // in1, in2, duty[7:0]
-    output wire         stby_o,   // after cnt == 0x0100_0000 , high
-    output wire         in1_o,    //
-    output wire         in2_o,    //
-    output wire         pwm_o     
+    input  wire         clk_i,    //input clock in config.vh
+    input  wire         we_i,     //dbus_addr==32'h3000_0040 & dbus_we
+    input  wire [31:0]  ctrl_i,   //in1, in2, duty[7:0]
+    output wire         stby_o,   //after cnt == 0x0100_0000 , high
+    output wire         in1_o,    //control motor rotation
+    output wire         in2_o,    //control motor rotation
+    output wire         pwm_o     //pwm control signal  
 );
 
     reg [31:0] r_motor_ctrl = 0;

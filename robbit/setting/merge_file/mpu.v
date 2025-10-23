@@ -4,15 +4,15 @@
 /*********************************************************************************************************/
 
 `include "config.vh"
-//I2C(センサとFPGAの通信)
+
 module mpu6050(
-    input clk_i,           //input clock CLK_FREQ_MHZ in config.vh
-    input rst_i,           //reset (active high)
-    output [31:0] data1_o, // MMIO
-    output [31:0] data2_o, // MMIO
-    output [31:0] data3_o, // MMIO
-    inout scl,             //I2C SCL  PULLUP TRUE at Pmod
-    inout sda              //I2C SDA  PULLUP TRUE at Pmod
+    input clk_i,           
+    input rst_i,           
+    output [31:0] data1_o, 
+    output [31:0] data2_o, 
+    output [31:0] data3_o, 
+    inout scl,             
+    inout sda              
     );
 
     reg [7:0] r_whoami;
@@ -80,40 +80,40 @@ module mpu6050(
                 //release sleep mode 
                 ST_WRITE_INIT_SETUP: begin
                     if(w_cmd_ready) begin
+                        r_cmd_valid <= 1'b1;
                         r_i2c_slave_addr <= MPU6050_I2C_ADDR;     
                         r_i2c_rw <= 1'b0;                     //write
                         r_i2c_sub_addr <= 8'h6B;              //register address is 0x6B for Device ID
                         r_i2c_byte_len <= 5'd1;               //write 1byte 
                         r_state <= ST_WRITE_INIT_REQ;
-                        r_cmd_valid <= 1'b1;
                     end
                 end
 
                 ST_WRITE_INIT_REQ: begin
                     if(w_write_ready) begin
-                        r_state <= ST_WRITE_INIT_DONE;
                         r_write_valid <= 1'b1;
                         r_cmd_valid <= 1'b0;
                         r_i2c_wdata <= 8'b0;
+                        r_state <= ST_WRITE_INIT_DONE;
                     end
                 end
 
                 ST_WRITE_INIT_DONE: begin
                     if(w_cmd_ready) begin
-                        r_state <= ST_READ_WHO_SETUP;
                         r_write_valid <= 1'b0;
+                        r_state <= ST_READ_WHO_SETUP;
                     end
                 end
 
                 ST_READ_WHO_SETUP: begin
-                    if(r_delay_cnt == 100_000_000) begin       //1 sec delay
+                    if(r_delay_cnt == 100_000_000) begin       
+                        r_cmd_valid <= 1'b1;
                         r_i2c_slave_addr <= MPU6050_I2C_ADDR;    
                         r_i2c_rw <= 1'b1;                      //read
                         r_i2c_sub_addr <= 8'h75;               //register address is 0x75 for WHO AM I
                         r_i2c_byte_len <= 5'd1;                //read 1byte 
                         r_i2c_wdata <= 8'b0;                   //nothing to write, this is a read
                         r_state <= ST_READ_WHO_REQ;
-                        r_cmd_valid <= 1'b1;
                         r_readbyte_cnt <= 0;
                     end else begin
                         r_delay_cnt <= r_delay_cnt + 'h1;
@@ -215,11 +215,11 @@ module mpu6050(
     //Instantiate daughter modules 
     i2c_master i_i2c_master(
         .clk_i          (clk_i),                   //input clock CLK_FREQ_MHZ in config.vh
-        .rst_i          (!rst_i),                  //reset for creating a known start condition
-        .slave_addr_i   (r_i2c_slave_addr),        //7 bit slave address
-        .reg_addr_i     (r_i2c_sub_addr),          //8 bit register address 
+        .rst_i          (!rst_i),                  //reset i2c_master
+        .slave_addr_i   (r_i2c_slave_addr),        //slave address(7bit)
+        .reg_addr_i     (r_i2c_sub_addr),          //register address(8bit) 
         .byte_len_i     (r_i2c_byte_len),          //number of bytes to read or write
-        .wdata_i        (r_i2c_wdata),             //Data to write if performing write action
+        .wdata_i        (r_i2c_wdata),             //write data(8bit)
         .cmd_valid_i    (r_cmd_valid),             //valid signal for start of transaction 
         .write_valid_i  (r_write_valid),           //valid signal for write
         .read_valid_i   (r_read_valid),            //valid signal for read
@@ -229,9 +229,9 @@ module mpu6050(
         .read_ready_o   (w_read_ready),            //ready signal for read
         .read_data_o    (w_i2c_data_out),          //read data from slave
         .data_valid_o   (w_valid_out),             //data valid of read_data
-        .nack_o         (w_nack),                    //Negative Acknowledgment(failed transaction)
-        .scl            (scl),                     //i2c clck line
-        .sda            (sda)                      //i2c data line
+        .nack_o         (w_nack),                  //negative Acknowledgment(failed transaction)
+        .scl            (scl),                     //clock bus 
+        .sda            (sda)                      //data bus
     );  
 
 endmodule
