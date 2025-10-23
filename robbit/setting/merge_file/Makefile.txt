@@ -18,13 +18,13 @@ USE_HLS ?= 0
 .PHONY: build prog run clean
 all: prog build
 
-build: 
+build:
 	$(RTLSIM) --binary --trace --top-module top --Wno-WIDTHTRUNC --Wno-WIDTHEXPAND -o top *.v
 	gcc -O2 dispemu/dispemu.c -o build/dispemu -lcairo -lX11
 
 prog:
 	mkdir -p build
-	$(GCC) -Os -march=rv32im -mabi=ilp32 -nostartfiles -Iapp -Tapp/link.ld -o build/main.elf app/crt0.s app/*.c *.c 
+	$(GCC) -Os -march=rv32im -mabi=ilp32 -nostartfiles -Iapp -Tapp/link.ld -o build/main.elf app/crt0.s app/*.c *.c
 	make initf
 
 imem_size =	$(shell grep -oP "\`define\s+IMEM_SIZE\s+\(\K[^)]*" config.vh | bc)
@@ -93,6 +93,10 @@ vpp:
 	mkdir -p cfu
 	cp vitis/hls/impl/verilog/*.v cfu/.
 	cp vitis/hls/impl/verilog/*.tcl cfu/.
+
+hls-sim:
+	make prog
+	$(RTLSIM) --binary --trace --top-module top -DUSE_HLS -Icfu --Wno-TIMESCALEMOD --Wno-WIDTHTRUNC --Wno-WIDTHEXPAND -o top *.v
 
 init:
 	cp constr/$(TARGET).xdc main.xdc

@@ -1,5 +1,5 @@
 # stamp file of init
-INIT_STAMP := .init-done
+INIT_STAMP := ./setting/init-done
 
 init: $(INIT_STAMP)
 
@@ -14,8 +14,8 @@ reset:
 	make -C ./CFU-Proving-Ground clean
 	git submodule update --init --force
 	rm -f ./setting/merge_file/*.bak
-	rm -f ./$(INIT_STAMP)
-	rm -rf ./CFU-Proving-Ground/build
+	rm -f $(INIT_STAMP)
+	rm -rf ./CFU-Proving-Ground/build ./CFU-Proving-Ground/Madgwick
 	rm -f ./CFU-Proving-Ground/main.cpp ./CFU-Proving-Ground/main.xdc ./CFU-Proving-Ground/build.tcl ./CFU-Proving-Ground/*.txt ./CFU-Proving-Ground/mpu.v ./CFU-Proving-Ground/robbit.v ./CFU-Proving-Ground/i2c_master.v
 	rm -f ./CFU-Proving-Ground/app/my_printf*
 filename = ./app/my_printf.c
@@ -26,6 +26,7 @@ merge:
 	cp ./setting/merge_file/*.v ./CFU-Proving-Ground/
 	cp ./setting/merge_file/main.xdc ./CFU-Proving-Ground/
 	cp ./setting/merge_file/build.tcl ./CFU-Proving-Ground/
+	cp -r ./setting/merge_file/Madgwick ./CFU-Proving-Ground/
 	rm -rf ./CFU-Proving-Ground/main.c
 	if [ ! -f "$(filename)" ]; then\
 		cp ./setting/merge_file/my_printf* ./CFU-Proving-Ground/app; \
