@@ -93,7 +93,7 @@ robbit-espフォルダ内には[開発マニュアル](./robbit-esp/manual/robbi
         - robbit/setting/merge_file/MadgwickAHRS.h
     - 使用箇所：
         - robbit、robbit-espともに、ソースコードのコンパイル時に静的リンクを使用し組み込む
-        - main.cpp、robbit-esp.inoともに、MadgwickAHRS.cの内容をコピーして記述していない 
+        - robbit/setting/merge_file/main.cpp、およびrobbit-esp/robbit-esp.inoにてヘッダファイルをincludeし、ビルド時に静的リンク
     - ライセンス：GNU Lesser General Public License v2.1 or later
     - ライセンス全文は本リポジトリに同梱（[COPYING.LESSER](./robbit/setting/merge_file/Madgwick/COPYING.LESSER)）されています。
     - ※このライブラリを使用しているコードの再利用・再配布時には、LGPLの条件にご注意ください。

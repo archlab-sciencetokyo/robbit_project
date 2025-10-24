@@ -43,7 +43,7 @@ int *const MTR_ADDR_ctrl = (int *)0x30000040;
 int *const BUTTON_ADDR   = (int *)0x30000044;
 
 /******************************************************************************************/
-#define FREQ         100   // Operation frequency in Mz
+#define FREQ         100   // Timer frequency(100KHz)
 #define LOOP_HZ      1000  // Hz of main loop
 #define PWM_BASE      38   // Incremental PWM signal 
 #define V_MIN          0   // PWM Min

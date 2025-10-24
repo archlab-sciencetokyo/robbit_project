@@ -64,7 +64,7 @@ robbitの開発は以下の手順を想定している。
 | 0x30000000 | IMU Acceleration Y, X |
 | 0x30000004 | IMU Angular Velocity X, Acceleration Z |
 | 0x30000008 | IMU Angular Velocity Z, Y |
-| 0x30000010 | 100MHz Timer Clock |
+| 0x30000010 | 100KHz Timer Clock |
 | 0x30000040 | Motor Control with PWM |
 | 0x30000044 | Two Buttons Detection |
 | 0x40000000 | performance counter control (0: reset, 1: start, 2: stop)|
