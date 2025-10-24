@@ -37,6 +37,7 @@ FPGAに実装するモジュールはすべてVerilog HDLで実装されてい�
 
 **robbit**はPIDソフトウェアやハードウェアを変更することで、その動きが大きく変わる。
 複数人で開発するときは、自立時間を競うコンテストなどを開いてみると面白いかもしれない。
+自立時間を競う上で、風を追加したり、滑りやすい床で自立させたりするとさらに面白くなる。 
 
 ###  1.4. robbit プロジェクト構造
 
@@ -86,10 +87,13 @@ robbit-espフォルダ内には[開発マニュアル](./robbit-esp/manual/robbi
 
 - MadgwickAHRS ライブラリ
     - 提供元：Arduino LLC
-    - 使用箇所：
+    - リンク：https://github.com/arduino-libraries/MadgwickAHRS
+    - 再配布箇所：
         - robbit/setting/merge_file/MadgwickAHRS.c
         - robbit/setting/merge_file/MadgwickAHRS.h
-        - robbit-esp/robbit-esp.ino（#include <MadgwickAHRS.h>）
+    - 使用箇所：
+        - robbit、robbit-espともに、ソースコードのコンパイル時に静的リンクを使用し組み込む
+        - main.cpp、robbit-esp.inoともに、MadgwickAHRS.cの内容をコピーして記述していない 
     - ライセンス：GNU Lesser General Public License v2.1 or later
     - ライセンス全文は本リポジトリに同梱（[COPYING.LESSER](./robbit/setting/merge_file/Madgwick/COPYING.LESSER)）されています。
     - ※このライブラリを使用しているコードの再利用・再配布時には、LGPLの条件にご注意ください。
@@ -98,4 +102,4 @@ robbit-espフォルダ内には[開発マニュアル](./robbit-esp/manual/robbi
 
 ### 2025/10/24
 
-- robbit, robbit-espのversion 1.0を公開
+- robbit_project(Two-wheeled self-balancing robot project)のversion 1.0を公開

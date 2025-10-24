@@ -1,12 +1,14 @@
-/******************************************************************************************/
-/* Self Balancing Car Project since 2025-01      Copyright(c) 2025 Archlab. Science Tokyo */
-/* Version (2025-05-21a) -> 2025-08-22c                                                   */
-/* Released under the MIT license https://opensource.org/licenses/mit                     */
-/*                                                                                        */
-/* This sketch uses the MadgwickAHRS library by Arduino LLC,                              */
-/* licensed under the GNU Lesser General Public License v2.1 or later.                    */
-/* https://github.com/arduino-libraries/MadgwickAHRS                                      */
-/******************************************************************************************/
+/***************************************************************************************************************************/
+/* robbit(Two-wheeled Self Balancing Car Project) since 2025-10 Copyright(c) 2025 Archlab. Science Tokyo                   */
+/* Released under the MIT license https://opensource.org/licenses/mit                                                      */
+/*                                                                                                                         */
+/* This program links to the MadgwickAHRS library licensed under the GNU Lesser General Public License v2.1 (LGPL v2.1) or */
+/* link to the MadgwickAHRS library licensed under later versions.                                                         */
+/*                                                                                                                         */
+/* The source code and licence terms for the MadgwickAHRS library are contained                                            */
+/* in https://github.com/arduino-libraries/MadgwickAHRS                                                                    */
+/***************************************************************************************************************************/
+
 #include <Wire.h>
 #include "MPU6050.h"
 #include <MadgwickAHRS.h>
