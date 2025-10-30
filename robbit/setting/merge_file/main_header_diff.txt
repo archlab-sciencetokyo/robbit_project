@@ -1,0 +1,11 @@
+    output wire scl, // I2C Gyroscope sensor
+`ifdef SYNTHESIS             
+    inout  wire sda, // I2C Gyroscope sensor
+`else
+    input  wire sda, // I2C Gyroscope sensor
+`endif             
+    output wire motor_stby, // motor driver
+    output wire motor_ain1, // motor driver
+    output wire motor_ain2, // motor driver
+    output wire motor_pwma, // motor driver
+    input  wire [1:0] button, //button
