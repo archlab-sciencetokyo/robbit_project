@@ -70,7 +70,7 @@ FPGAに実装するモジュールはすべてVerilog HDLで実装されてい�
         <td><img src="./robbit-esp/image/esp32c3-structure-side.jpg" alt="画像2" width="200"></td>
 </table>
 
-### 2.1. robbit プロジェクト構造
+### 2.1. robbit-esp プロジェクト構造
 **robbit-esp**の開発を行う場合は[robbit-espフォルダ](./robbit-esp/)内を参照してほしい。
 robbit-espフォルダ内には[開発マニュアル](./robbit-esp/manual/robbit-esp_manual.pdf)と
 [システムマニュアル](./robbit-esp/manual/robbit-esp_system_manual.pdf)が存在するので、これらを参考に開発を進めてほしい。
