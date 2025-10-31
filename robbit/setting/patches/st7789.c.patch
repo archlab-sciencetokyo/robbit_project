@@ -1,0 +1,55 @@
+diff --git a/app/st7789.c b/app/st7789.c
+index 90553be..b955ab1 100644
+--- a/app/st7789.c
++++ b/app/st7789.c
+@@ -168,7 +168,7 @@ void pg_lcd_draw_char(int x, int y, char c, char color, int scale) {
+             if ((font8x8_basic[c][i >> scale] >> (j >> scale)) & 1) {
+                 pg_lcd_draw_point(x + j, y + i, color);
+             } else {
+-                pg_lcd_draw_point(x + j, y + i, 0);
++                pg_lcd_draw_point(x + j, y + i, 1);
+             }
+         }
+     }
+@@ -192,7 +192,7 @@ void _pg_lcd_update_pos () {
+ void pg_lcd_reset() {
+     st7789_col = 0;
+     st7789_row = 0;
+-    pg_lcd_fill(0);
++    pg_lcd_fill(1);
+ }
+ 
+ void pg_lcd_printd(long long x) {
+@@ -234,7 +234,7 @@ void pg_lcd_printh(unsigned int x) {
+ void pg_lcd_prints(const char *str) {
+     while (*str) {
+         if (*str == '\n') {
+-            if (st7789_col != 0) st7789_row = (st7789_row + 1) % 15;
++            st7789_row = (st7789_row + 1) % 15;
+             st7789_col = 0;
+         }
+         else if (*str == '\r') {
+@@ -248,6 +248,23 @@ void pg_lcd_prints(const char *str) {
+     }
+ }
+ 
++
++void pg_lcd_prints_color(const char *str, char color) {
++    while (*str) {
++        if (*str == '\n') {
++            st7789_col = 0;
++            st7789_row = (st7789_row + 1) % 15;
++        }
++        else if (*str == '\r') {
++            st7789_col = 0;
++        }
++        else {
++            pg_lcd_draw_char(st7789_col << 4, st7789_row << 4, *str, color, 1);
++            _pg_lcd_update_pos();
++        }
++        str++;
++    }
++}
+ void pg_lcd_set_pos(int x, int y) {
+     st7789_col = x;
+     st7789_row = y;

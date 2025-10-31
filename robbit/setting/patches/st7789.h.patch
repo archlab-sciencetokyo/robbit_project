@@ -1,0 +1,10 @@
+diff --git a/app/st7789.h b/app/st7789.h
+index 36a2384..9919d8d 100644
+--- a/app/st7789.h
++++ b/app/st7789.h
+@@ -17,4 +17,5 @@ void pg_lcd_reset();
+ void pg_lcd_printd(long long x);
+ void pg_lcd_printh(unsigned int x);
+ void pg_lcd_prints(const char *str);
++void pg_lcd_prints_color(const char *str, char color);
+ void pg_lcd_set_pos(int x, int y);
