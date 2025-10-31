@@ -1,0 +1,138 @@
+diff --git a/Makefile b/Makefile
+index 6ea4f77..ed9aa65 100644
+--- a/Makefile
++++ b/Makefile
+@@ -1,32 +1,31 @@
+ # CFU Proving Ground since 2025-02    Copyright(c) 2025 Archlab. Science Tokyo
+ # Released under the MIT license https://opensource.org/licenses/mit 
+-
+-GCC     := /tools/cad/riscv/rv32ima/bin/riscv32-unknown-elf-gcc
+ GPP     := /tools/cad/riscv/rv32ima/bin/riscv32-unknown-elf-g++
++LINK := /tools/cad/riscv/rv32ima/bin/riscv32-unknown-elf-ar
+ OBJCOPY := /tools/cad/riscv/rv32ima/bin/riscv32-unknown-elf-objcopy
+ OBJDUMP := /tools/cad/riscv/rv32ima/bin/riscv32-unknown-elf-objdump
+ VIVADO  := /tools/Xilinx/Vivado/2024.1/bin/vivado
+ VPP     := /tools/Xilinx/Vitis/2024.1/bin/v++
+ RTLSIM  := /tools/cad/bin/verilator
+-
+-TARGET := arty_a7
+-#TARGET := cmod_a7
+-#TARGET := nexys_a7
+-
++TARGET := cmod_a7
++CFU := CFU-Proving-Ground
+ USE_HLS ?= 0
+-
+ .PHONY: build prog run clean
+ all: prog build
+-
+-build: 
++build: prog
+ 	$(RTLSIM) --binary --trace --top-module top --Wno-WIDTHTRUNC --Wno-WIDTHEXPAND -o top *.v
+ 	gcc -O2 dispemu/dispemu.c -o build/dispemu -lcairo -lX11
+-
+ prog:
+ 	mkdir -p build
+-	$(GCC) -Os -march=rv32im -mabi=ilp32 -nostartfiles -Iapp -Tapp/link.ld -o build/main.elf app/crt0.s app/*.c *.c 
++	$(GPP) -Os -IMadgwick -Iapp -march=rv32im -mabi=ilp32 -c Madgwick/MadgwickAHRS.cpp -o build/MadgwickAHRS.o
++	$(LINK) rcs build/libmadgwick.a build/MadgwickAHRS.o
++	$(GPP) -Os -IMadgwick -Iapp -march=rv32im -mabi=ilp32 -c main.cpp -o build/main.o
++	$(GPP) -Os -IMadgwick -Iapp -march=rv32im -mabi=ilp32 -nostartfiles -Tapp/link.ld \
++	-o build/main.elf \
++	app/crt0.s app/*.c build/main.o \
++	-Lbuild -lmadgwick -lm
++	rm -rf build/MadgwickAHRS.o build/libmadgwick.a build/main.o
+ 	make initf
+-
+ imem_size =	$(shell grep -oP "\`define\s+IMEM_SIZE\s+\(\K[^)]*" config.vh | bc)
+ dmem_size =	$(shell grep -oP "\`define\s+DMEM_SIZE\s+\(\K[^)]*" config.vh | bc)
+ initf:
+@@ -57,13 +56,10 @@ initf:
+ 		} > mem$$suf.txt; \
+ 		IFS=$$tmp_IFS; \
+ 	done
+-
+ run:
+ 	./obj_dir/top
+-
+ drun:
+ 	./obj_dir/top | build/dispemu 1
+-
+ TCL_ARG := $(if $(ifeq ($(USE_HLS),1)),--hls,)
+ bit:
+ 	@if [ ! -f memi.txt ] || [ ! -f memd.txt ]; then \
+@@ -76,34 +72,61 @@ bit:
+ 	fi
+ 	$(VIVADO) -mode batch -source build.tcl -tclargs $(TCL_ARG)
+ 	cp vivado/main.runs/impl_1/main.bit build/.
++	cp vivado/main.runs/impl_1/main.bin build/.
+ 	@if [ -f vivado/main.runs/impl_i/main.ltx ]; then \
+ 		cp -f vivado/main.runs/impl_i/main.ltx build/.; \
+ 	fi
+-
+ conf:
+ 	@if [ ! -f build/main.bit ]; then \
+ 		echo "Please run 'make bit' first."; \
+ 		exit 1; \
+ 	fi
+ 	$(VIVADO) -mode batch -source scripts/prog_dev.tcl
+-
+ vpp:
+ 	$(VPP) -c --mode hls --config constr/cfu_hls.cfg --work_dir vitis
+ 	if [ -d cfu ]; then rm -rf cfu; fi
+ 	mkdir -p cfu
+ 	cp vitis/hls/impl/verilog/*.v cfu/.
+ 	cp vitis/hls/impl/verilog/*.tcl cfu/.
+-
+ hls-sim:
+ 	make prog
+ 	$(RTLSIM) --binary --trace --top-module top -DUSE_HLS -Icfu --Wno-TIMESCALEMOD --Wno-WIDTHTRUNC --Wno-WIDTHEXPAND -o top *.v
+-
+-init:
+-	cp constr/$(TARGET).xdc main.xdc
+-	cp constr/build_$(TARGET).tcl build.tcl
+-
++# stamp file of init
++INIT_STAMP := ./setting/init-done
++init: $(INIT_STAMP)
++$(INIT_STAMP):
++	chmod +x ./setting/merge_file/update_makefile.sh
++	chmod +x ./setting/merge_file/setup.sh
++	./setting/merge_file/update_makefile.sh
++	make merge
++	@touch $(INIT_STAMP)
++reset:
++	make -C ./CFU-Proving-Ground clean
++	git submodule update --init --force
++	rm -f ./setting/merge_file/*.bak
++	rm -f $(INIT_STAMP)
++	rm -rf ./CFU-Proving-Ground/build ./CFU-Proving-Ground/Madgwick
++	rm -f ./CFU-Proving-Ground/main.cpp ./CFU-Proving-Ground/main.xdc ./CFU-Proving-Ground/build.tcl ./CFU-Proving-Ground/*.txt ./CFU-Proving-Ground/mpu.v ./CFU-Proving-Ground/robbit.v ./CFU-Proving-Ground/i2c_master.v
++	rm -f ./CFU-Proving-Ground/app/my_printf*
++filename = ./app/my_printf.c
++fileexists = $(shell ls | grep ${filename})
++merge:
++	cp ./setting/merge_file/main.cpp ./CFU-Proving-Ground/
++	cp ./setting/merge_file/*.v ./CFU-Proving-Ground/
++	cp ./setting/merge_file/main.xdc ./CFU-Proving-Ground/
++	cp ./setting/merge_file/build.tcl ./CFU-Proving-Ground/
++	cp -r ./setting/merge_file/Madgwick ./CFU-Proving-Ground/
++	rm -rf ./CFU-Proving-Ground/main.c
++	if [ ! -f "$(filename)" ]; then\
++		cp ./setting/merge_file/my_printf* ./CFU-Proving-Ground/app; \
++	fi
++	sed -i.bak "s/IMEM_SIZE (32\*1024)/IMEM_SIZE (64\*1024)/" ./CFU-Proving-Ground/config.vh
++	sed -i "s/LENGTH = 0x00008000/LENGTH = 0x00010000/" ./CFU-Proving-Ground/app/link.ld
++	sed -i 's/`define LCD_ROTATE 0/`define LCD_ROTATE 2/' ./CFU-Proving-Ground/config.vh
++	sed -i 's/`define CLK_FREQ_MHZ 160/`define CLK_FREQ_MHZ 150/' ./CFU-Proving-Ground/config.vh
++	chmod +x ./setting/merge_file/*.sh
++	./setting/merge_file/update_st7789.sh
++	./setting/merge_file/update_top.sh
++	./setting/merge_file/update_main.sh
+ clean:
+-	rm -rf obj_dir rvcpu-32im* vivado* .Xil
+-
+-reset-hard:
+-	rm -rf obj_dir build rvcpu-32im* sample1.txt vivado* .Xil build.tcl main.xdc
++	rm -rf obj_dir rvcpu-32im* vivado* .Xil
+\ No newline at end of file

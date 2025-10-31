@@ -1,0 +1,25 @@
+diff --git a/config.vh b/config.vh
+index 2e2c20c..db01e58 100644
+--- a/config.vh
++++ b/config.vh
+@@ -8,17 +8,17 @@
+ `define CONFIG_VH_
+ 
+ // LCD Display
+-`define LCD_ROTATE 0 // 0: 0 degree, 1: 90 degree, 2: 180 degree, 3: 270 degree (Left Rotate)
++`define LCD_ROTATE 2 // 0: 0 degree, 1: 90 degree, 2: 180 degree, 3: 270 degree (Left Rotate)
+ 
+ // cpu
+-`define CLK_FREQ_MHZ 160  // operating clock frequency in MHz
++`define CLK_FREQ_MHZ 150  // operating clock frequency in MHz
+ 
+ `define RESET_VECTOR 'h00000000
+ 
+ `define BTB_ENTRY (2*1024)  // the number of BTB entries for branch prediction
+ 
+ // ram
+-`define IMEM_SIZE (32*1024) // instruction memory size in byte
++`define IMEM_SIZE (64*1024) // instruction memory size in byte
+ `define DMEM_SIZE (16*1024) // data memory size in byte
+ 
+ `define IMEM_ENTRIES (`IMEM_SIZE/4)

@@ -1,0 +1,20 @@
+diff --git a/top.v b/top.v
+index b4443dc..8ae7626 100644
+--- a/top.v
++++ b/top.v
+@@ -71,7 +71,14 @@ module top;
+         .st7789_SDA(sda),
+         .st7789_SCL(scl),
+         .st7789_DC (dc),
+-        .st7789_RES(res)
++        .st7789_RES(res),
++        .scl            (           ),
++        .sda            (           ),
++        .motor_stby     (           ),
++        .motor_ain1     (           ),
++        .motor_ain2     (           ),
++        .motor_pwma     (           ),
++        .button         (           )
+     );
+ 
+ endmodule
