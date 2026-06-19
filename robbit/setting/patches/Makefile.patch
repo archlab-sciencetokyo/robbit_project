@@ -10,7 +10,7 @@ index 2efae9f..a6ed54d 100644
  OBJCOPY := /tools/cad/riscv/rv32ima/bin/riscv32-unknown-elf-objcopy
  OBJDUMP := /tools/cad/riscv/rv32ima/bin/riscv32-unknown-elf-objdump
  VIVADO  := /tools/Xilinx/Vivado/2024.1/bin/vivado
-@@ -10,8 +11,8 @@ VPP     := /tools/Xilinx/Vitis/2024.1/bin/v++
+@@ -10,7 +11,7 @@ VPP     := /tools/Xilinx/Vitis/2024.1/bin/v++
  RTLSIM  := /tools/cad/bin/verilator
  
 -TARGET := arty_a7
