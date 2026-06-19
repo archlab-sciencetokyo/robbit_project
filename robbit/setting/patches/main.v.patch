@@ -59,19 +59,20 @@ index e63c96b..9465d1c 100644
 +    );
  
 +    
-     reg                         rdata_sel = 0;
+     reg rdata_sel = 0;
      always @(posedge clk) rdata_sel <= dbus_addr[30];
 -    assign dbus_rdata = (rdata_sel) ? perf_rdata : dmem_rdata;
 +    assign dbus_rdata = (rdata_sel) ? perf_rdata : (r_dmem_addr[31:28]==4'h3) ? w_mmio_data: dmem_rdata;
  
      cpu cpu (
-         .clk_i        (clk),         // input  wire
-@@ -60,7 +105,7 @@ module main (
-         .rdata_o(imem_rdata)   // output reg  [DATA_WIDTH-1:0]
-     );
- 
--    wire dmem_we = dbus_we & (dbus_addr[28]);
-+    wire dmem_we = dbus_we & (dbus_addr[28]) & !(dbus_addr[29]);
-     wire [31:0] dmem_addr = dbus_addr;
+         .clk_i         (clk),         // input  wire
+@@ -62,7 +107,7 @@ module main (
+     wire [31:0] dmem_addr  = dbus_addr;
      wire [31:0] dmem_wdata = dbus_wdata;
-     wire [3:0] dmem_wstrb = dbus_wstrb;
+     wire  [3:0] dmem_wstrb = dbus_wstrb;
+-    wire        dmem_re    = !dbus_we & (dbus_addr[28]);
+-    wire        dmem_we    =  dbus_we & (dbus_addr[28]);
++    wire        dmem_re    = !dbus_we & (dbus_addr[28]) & !(dbus_addr[29]);
++    wire        dmem_we    =  dbus_we & (dbus_addr[28]) & !(dbus_addr[29]);
+     wire [31:0] dmem_rdata;
+     m_dmem dmem (
