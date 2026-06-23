@@ -1,84 +1,95 @@
 # robbit
 
-**robbit**はFPGAを活用する扱いやすいtwo-wheeled self-balancing robotである。
+[日本語版はこちら / Read this document in Japanese](./README_ja.md)
 
-これは、**CFU Proving Ground**というオープンソースの開発環境と**Cmod A7-35T** FPGAボードを使用して開発されている。  
+**robbit** is an accessible two-wheeled self-balancing robot that uses an
+FPGA.
 
-**CFU Proving Ground**の詳細は
-[archlab-science-tokyo/CFU-Proving-Ground](https://github.com/archlab-sciencetokyo/CFU-Proving-Ground)
-を参照してほしい。
+It is developed using the open-source **CFU Proving Ground** development
+environment and a **Cmod A7-35T** FPGA board.
 
-- 推奨OS: **Ubuntu Linux**.
--  **Vivado 2024.1**.
+For details about **CFU Proving Ground**, see
+[archlab-science-tokyo/CFU-Proving-Ground](https://github.com/archlab-sciencetokyo/CFU-Proving-Ground).
+
+- Recommended OS: **Ubuntu Linux**
+- FPGA development tool: **Vivado 2024.1**
 
 <table>
     <tr>
-        <td><img src="setting/image/bcar-structure-front.JPG" alt="画像1" width="200"></td>
-        <td><img src="setting/image/bcar-structure-side.JPG" alt="画像2" width="200"></td>
+        <td><img src="setting/image/bcar-structure-front.JPG" alt="Front view of robbit" width="200"></td>
+        <td><img src="setting/image/bcar-structure-side.JPG" alt="Side view of robbit" width="200"></td>
+    </tr>
 </table>
 
------
+---
 
-## 構成部品
+## Components
 
-robbitの組み立てには以下の部品を使用する。価格は2025年8月時点の価格である。
+The following components are used to assemble robbit. Prices are as of August
+2025 and are listed in Japanese yen.
 
-| 購入先 | 品名 | URL | 合計 | 数量 | 単価 |
-|:---|:---|:---|:---|:---|:---|
-| RS | FPGA Cmod A7 Artix-7 |  https://jp.rs-online.com/web/p/fpga-development-tools/1346483?srsltid=AfmBOoo4WPbP23WIyYoDyq6-E5PDHWm1VNSNc6kzXF4a5DtnkcVwOpOFWcQ | 15733 | 1 | 15733 |
-| Amazon | MPU-6050 3軸加速度計・ジャイロモジュール MPU-6050 | https://www.amazon.co.jp/gp/product/B0DL5D5V4B/ | 1949 | 6 | 325 |
-| Amazon | タミヤ 楽しい工作シリーズ No.188 ミニモーター標準ギヤボックス 8速 70188 | https://www.amazon.co.jp/gp/product/B002R0DQCK/　| 632 | 1 | 632 |
-| Amazon | タミヤ 楽しい工作シリーズ No.193 スリムタイヤセット (36・55mm径) 70193 | https://www.amazon.co.jp/gp/product/B003YORNNG/ | 528 | 1 | 528 |
-| Amazon | タミヤ 楽しい工作シリーズ No.157 ユニバーサルプレート 2枚セット (70157) | https://www.amazon.co.jp/dp/B001VZHRXG/ | 660 | 4 | 165 |
-| Amazon | tb6612fngデュアルdcステッピングモータドライバモジュール | https://www.amazon.co.jp/dp/B0F2949HQR/ | 998 | 3 | 333 |
-| Amazon | SpiインターフェースフルカラーTft Lcdディスプレイ | https://www.amazon.co.jp/dp/B0F2HLG88G/ | 1999 | 2 | 1000 |
-| Amazon | EEMB 3.7V 充電式 リチウムイオン電池 653042 820mAh | https://www.amazon.co.jp/gp/product/B08D6B3PC4/ | 2499 | 4 | 625 |
-| Amazon | TP4056 Type-C USB リチウム電池充電器モジュール | https://www.amazon.co.jp/dp/B0C8HNLM29/ | 525 | 3 | 175 |
+| Vendor | Product | URL | Total | Quantity | Unit Price |
+|:---|:---|:---|---:|---:|---:|
+| RS | FPGA Cmod A7 Artix-7 | <https://jp.rs-online.com/web/p/fpga-development-tools/1346483?srsltid=AfmBOoo4WPbP23WIyYoDyq6-E5PDHWm1VNSNc6kzXF4a5DtnkcVwOpOFWcQ> | 15,733 | 1 | 15,733 |
+| Amazon | MPU-6050 3-axis accelerometer and gyroscope module | <https://www.amazon.co.jp/gp/product/B0DL5D5V4B/> | 1,949 | 6 | 325 |
+| Amazon | Tamiya Educational Construction Series No. 188 Mini Motor Multi-Ratio Gearbox (8-Speed), 70188 | <https://www.amazon.co.jp/gp/product/B002R0DQCK/> | 632 | 1 | 632 |
+| Amazon | Tamiya Educational Construction Series No. 193 Slim Tire Set (36/55 mm Diameter), 70193 | <https://www.amazon.co.jp/gp/product/B003YORNNG/> | 528 | 1 | 528 |
+| Amazon | Tamiya Educational Construction Series No. 157 Universal Plate Set (2 Pieces), 70157 | <https://www.amazon.co.jp/dp/B001VZHRXG/> | 660 | 4 | 165 |
+| Amazon | TB6612FNG Dual DC Motor Driver Module | <https://www.amazon.co.jp/dp/B0F2949HQR/> | 998 | 3 | 333 |
+| Amazon | SPI Full-Color TFT LCD | <https://www.amazon.co.jp/dp/B0F2HLG88G/> | 1,999 | 2 | 1,000 |
+| Amazon | EEMB 3.7 V 820 mAh Rechargeable Lithium-Ion Battery, 653042 | <https://www.amazon.co.jp/gp/product/B08D6B3PC4/> | 2,499 | 4 | 625 |
+| Amazon | TP4056 USB Type-C Lithium Battery Charger Module | <https://www.amazon.co.jp/dp/B0C8HNLM29/> | 525 | 3 | 175 |
 
-## 開発方法
+## Development Workflow
 
-robbitの開発は以下の手順を想定している。
+The intended robbit development workflow is:
 
-1. robbitの組み立て
-2. プログラム書き込み(Bitstream、バイナリ生成、コンフィギュレーション)
-3. 動作確認
-4. パラメータチューニング
+1. Assemble robbit.
+2. Program the device (generate the bitstream and binary, then configure it).
+3. Verify its operation.
+4. Tune the parameters.
 
-上記の手順でrobbitの開発を行う際は、./setting/manualフォルダ内にある[**robbit_manual.pdf**](./setting/manual/robbit_manual.pdf)と
-[**robbit_system_manual.pdf**](./setting/manual/robbit_system_manual.pdf)を参考にする。
+When developing robbit using this workflow, refer to
+[**robbit_manual.pdf**](./setting/manual/robbit_manual.pdf) and
+[**robbit_system_manual.pdf**](./setting/manual/robbit_system_manual.pdf) in
+the `setting/manual` directory.
 
-まずは、**robbit_manual.pdf**に記載されている手順に沿ってrobbitの組み立てと動作確認を行うと良い。
+We recommend starting with the assembly and operation-verification procedures
+in **robbit_manual.pdf**. After verifying that the robot operates correctly,
+use **robbit_system_manual.pdf** as a reference while tuning the parameters.
 
-動作確認まで終えることができたら、**robbit_system.pdf**も参考にしながら、パラメータチューニングに取り組むことをお勧めする。
+- [robbit_manual.pdf](./setting/manual/robbit_manual.pdf): Assembly and
+  development procedures for robbit
+- [robbit_system_manual.pdf](./setting/manual/robbit_system_manual.pdf):
+  Control methods implemented in robbit
 
-- [robbit_manual.pdf](./setting/manual/robbit_manual.pdf) : robbitの組み立て手順と開発手順が示されている
-- [robbit_system_manual.pdf](./setting/manual/robbit_system_manual.pdf) : robbitに実装されている制御手法が示されている
+### If Operation Verification Fails
 
-### 動作確認がうまくいかないとき
+A verified bitstream file (`main.bit`) is available in the `bitstream`
+directory. Use it for operation verification if your generated bitstream does
+not work, or if setting up the development environment or generating a
+bitstream is difficult.
 
-`bitstream`フォルダ内に動作確認済みのBitstreamファイル(`main.bit`)を置いている。
-生成したBitstreamファイルを書き込んだが動かないときや、環境構築、Bitstream生成が困難な場合は、動作確認に利用すると良い。
+## Memory Map
 
-## メモリーマップ
+| Address | Description |
+|---|---|
+| `0x00000000`–`0x00007FFF` | 32 KiB instruction memory |
+| `0x10000000`–`0x10003FFF` | 16 KiB data memory |
+| `0x20000000`–`0x2000FFFF` | 64 KiB video memory |
+| `0x30000000` | IMU acceleration Y, X |
+| `0x30000004` | IMU angular velocity X, acceleration Z |
+| `0x30000008` | IMU angular velocity Z, Y |
+| `0x30000010` | 100 kHz timer clock |
+| `0x30000040` | Motor control with PWM |
+| `0x30000044` | Two-button detection |
+| `0x40000000` | Performance counter control (0: reset, 1: start, 2: stop) |
+| `0x40000004` | `mcycle` |
+| `0x40000008` | `mcycleh` |
+| `0x80000000` | `tohost` (for simulation) |
 
-| addr   |  description                     |
-| -----------| -----------------------------|
-| 0x00000000 - 0x00007FFF | 32KiB Instruction Memory     |
-| 0x10000000 - 0x10003FFF | 16KiB Data Memory            |
-| 0x20000000 - 0x2000FFFF | 64KiB Video Memory    |
-| 0x30000000 | IMU Acceleration Y, X |
-| 0x30000004 | IMU Angular Velocity X, Acceleration Z |
-| 0x30000008 | IMU Angular Velocity Z, Y |
-| 0x30000010 | 100KHz Timer Clock |
-| 0x30000040 | Motor Control with PWM |
-| 0x30000044 | Two Buttons Detection |
-| 0x40000000 | performance counter control (0: reset, 1: start, 2: stop)|
-| 0x40000004 | mcycle                  |
-| 0x40000008 | mcycleh                 |
-| 0x80000000 | tohost (for simulation) |
+## Version History
 
-## バージョン履歴
+### Version 1.0
 
-### version 1.0
-
-- 2025/10/31: version 1.0 公開
+- October 31, 2025: Released version 1.0
