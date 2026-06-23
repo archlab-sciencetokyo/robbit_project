@@ -44,18 +44,18 @@ The intended robbit-esp development workflow is:
 4. Tune the parameters.
 
 When developing robbit-esp using this workflow, refer to
-[**robbit-esp_manual.pdf**](./manual/robbit-esp_manual.pdf) and
-[**robbit-esp_system_manual.pdf**](./manual/robbit-esp_system_manual.pdf) in
+[**robbit-esp_manual_en.pdf**](./manual/robbit-esp_manual_en.pdf) and
+[**robbit-esp_system_manual_en.pdf**](./manual/robbit-esp_system_manual_en.pdf) in
 the `manual` directory.
 
 We recommend starting with the assembly and operation-verification procedures
-in **robbit-esp_manual.pdf**. After verifying that the robot operates
-correctly, use **robbit-esp_system_manual.pdf** as a reference while improving
+in **robbit-esp_manual_en.pdf**. After verifying that the robot operates
+correctly, use **robbit-esp_system_manual_en.pdf** as a reference while improving
 its performance.
 
-- [robbit-esp_manual.pdf](./manual/robbit-esp_manual.pdf): Assembly and
+- [robbit-esp_manual_en.pdf](./manual/robbit-esp_manual_en.pdf): Assembly and
   development procedures for robbit-esp
-- [robbit-esp_system_manual.pdf](./manual/robbit-esp_system_manual.pdf):
+- [robbit-esp_system_manual_en.pdf](./manual/robbit-esp_system_manual_en.pdf):
   Control methods implemented in robbit-esp
 
 ## Version History

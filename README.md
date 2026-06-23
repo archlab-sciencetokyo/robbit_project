@@ -55,8 +55,8 @@ floor can make the challenge even more interesting.
 ### 1.4. robbit Project Structure
 
 To develop **robbit**, see the [robbit directory](./robbit/). The directory
-also contains a [development manual](./robbit/setting/manual/robbit_manual.pdf)
-and a [system manual](./robbit/setting/manual/robbit_system_manual.pdf).
+also contains a [development manual](./robbit/setting/manual/robbit_manual_en.pdf)
+and a [system manual](./robbit/setting/manual/robbit_system_manual_en.pdf).
 Refer to these documents as you work. For further details, see the README in
 the `robbit` directory.
 
@@ -89,8 +89,8 @@ development and compare its behavior with **robbit**.
 
 To develop **robbit-esp**, see the
 [robbit-esp directory](./robbit-esp/). It contains a
-[development manual](./robbit-esp/manual/robbit-esp_manual.pdf) and a
-[system manual](./robbit-esp/manual/robbit-esp_system_manual.pdf).
+[development manual](./robbit-esp/manual/robbit-esp_manual_en.pdf) and a
+[system manual](./robbit-esp/manual/robbit-esp_system_manual_en.pdf).
 Refer to these documents as you work. For further details, see the README in
 the `robbit-esp` directory.
 

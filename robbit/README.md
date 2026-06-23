@@ -50,17 +50,17 @@ The intended robbit development workflow is:
 4. Tune the parameters.
 
 When developing robbit using this workflow, refer to
-[**robbit_manual.pdf**](./setting/manual/robbit_manual.pdf) and
-[**robbit_system_manual.pdf**](./setting/manual/robbit_system_manual.pdf) in
+[**robbit_manual_en.pdf**](./setting/manual/robbit_manual_en.pdf) and
+[**robbit_system_manual_en.pdf**](./setting/manual/robbit_system_manual_en.pdf) in
 the `setting/manual` directory.
 
 We recommend starting with the assembly and operation-verification procedures
-in **robbit_manual.pdf**. After verifying that the robot operates correctly,
-use **robbit_system_manual.pdf** as a reference while tuning the parameters.
+in **robbit_manual_en.pdf**. After verifying that the robot operates correctly,
+use **robbit_system_manual_en.pdf** as a reference while tuning the parameters.
 
-- [robbit_manual.pdf](./setting/manual/robbit_manual.pdf): Assembly and
+- [robbit_manual_en.pdf](./setting/manual/robbit_manual_en.pdf): Assembly and
   development procedures for robbit
-- [robbit_system_manual.pdf](./setting/manual/robbit_system_manual.pdf):
+- [robbit_system_manual_en.pdf](./setting/manual/robbit_system_manual_en.pdf):
   Control methods implemented in robbit
 
 ### If Operation Verification Fails

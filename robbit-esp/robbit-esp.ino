@@ -30,7 +30,7 @@ BLECharacteristic *pCharacteristic;
 #define D_I_MAX      0.2  // 0.2, 
 #define D_PWM_GAIN   1.0  // 1.0, 
 #define D_PWM_BASE    40  //  40, 
-#define D_LOOP_HZ    500  // 300, Hz of main loop
+#define D_LOOP_HZ    500  // 500, Hz of main loop
 #define D_TARGET   -12.2  // target roll
 /******************************************************************************************/
 float target    =  D_TARGET; // target angle
